@@ -110,6 +110,8 @@ void initWindow(); //Creates a new window and sets I/O settings
 
 
 void *printMenu(void *);
+void *printInstructor(void *);
+
 
 int main()
 {
@@ -137,6 +139,7 @@ int main()
 
 void *printMenu(void *)
 {
+
     int selectedItem = 0; // Seçili menü öğesinin indisini saklar
     int key = -1; // Klavyeden alınacak tuş değeri için değişken
 
@@ -145,35 +148,24 @@ void *printMenu(void *)
     // Kırmızı renkteki metni yazdırmak için renk çiftini başlat
     init_pair(2, COLOR_RED, COLOR_BLACK);
 
-    // Menü öğelerini içeren metin dizisi
-    char text[6][50] =
-    {
-        "New Game",
-        "Load the last game",
-        "Instructions",
-        "Settings",
-        "Points",
-        "Exit"
-    };
 
-    while (key != ENTER) // ENTER tuşuna basılmadığı sürece devam et
+    while (true) // ENTER tuşuna basılmadığı sürece devam et
     {
         //clear();
         // Menü öğelerini ekrana yazdır
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < mainMenuItem; i++)
         {
             // Seçili öğenin rengini belirle
             if (i == selectedItem)
             {
 
                 attron(COLOR_PAIR(2)); // Kırmızı renk çiftini etkinleştir
-                char strText[50];
-                sprintf(strText,"->%s",text[i]);
-                mvprintw(MENUY + (i * MENUDIF), MENUX,strText); // Menü öğesini ekrana yazdır
+                mvprintw(MENUY + (i * MENUDIF), MENUX - 2,"->");
+                mvprintw(MENUY + (i * MENUDIF), MENUX,mainMenu[i]); // Menü öğesini ekrana yazdır
             }else
             {
                 attron(COLOR_PAIR(1)); // Yeşil renk çiftini etkinleştir
-                mvprintw(MENUY + (i * MENUDIF), MENUX,text[i]); // Menü öğesini ekrana yazdır
+                mvprintw(MENUY + (i * MENUDIF), MENUX,mainMenu[i]); // Menü öğesini ekrana yazdır
             }
         }
 
@@ -181,7 +173,7 @@ void *printMenu(void *)
         attroff(COLOR_PAIR(2)); // Kırmızı renk çiftini devre dışı bırak
 
         key = getch(); // Klavyeden giriş al
-        if(key!=KEYERROR)
+        if(key != KEYERROR)
         {
             clear();
         }
@@ -192,6 +184,17 @@ void *printMenu(void *)
         else if (key == KEYPUP) // Yukarı ok tuşuna basıldığında
         {
             selectedItem = (selectedItem - 1 + 6) % 6; // Seçili öğeyi bir önceki öğeye taşı
+        }else if(key ==ENTER)
+        {
+
+            switch(selectedItem)
+            {
+                case 2:
+                     pthread_t th2;
+                        pthread_create(&th2, NULL,printInstructor,NULL);
+                        pthread_join(th2,NULL);
+                    break;
+            }
         }
 
 
@@ -199,6 +202,31 @@ void *printMenu(void *)
     }
     return NULL;
 }
+
+
+
+
+
+void *printInstructor(void *)
+{
+    clear();
+
+     // Yeşil renkteki metni yazdırmak için renk çiftini başlat
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    // Kırmızı renkteki metni yazdırmak için renk çiftini başlat
+    init_pair(2, COLOR_RED, COLOR_BLACK);
+
+    attron(COLOR_PAIR(1));
+    for(int i=0;i<settingMenuItem;i++)
+    {
+         mvprintw(MENUY + (i * MENUDIF), MENUX,settingMenu[i]);
+    }
+    refresh();
+    sleep(5);
+     clear();
+}
+
+
 
 
 
@@ -211,9 +239,10 @@ void initWindow()
 	curs_set(0);          // imleci gizle
 	cbreak();             // satýr tamponlamayý devre dýþý býrak
 	noecho();             // kullanýcýnýn girdiðini ekrana yazma
-	clear();              // ekraný temizle
+	clear();              // ekranı temizle
     sleep(1);             // 1 saniye bekle
 }
+
 
 void initGame()
 {
