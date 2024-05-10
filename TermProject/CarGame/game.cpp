@@ -111,16 +111,15 @@ void initWindow(); //Creates a new window and sets I/O settings
 
 void *printMenu(void *);
 void *printInstructor(void *);
-
+void *printSettings(void *);
 
 int main()
 {
     playingGame.leftKey = leftKeyArrow;      // Oyuncunun aracýný sola yönlendirmek için atanmýþ sol ok tuþu
     playingGame.rightKey = RightKeyArrow;    // Oyuncunun aracýný saða yönlendirmek için atanmýþ sað ok tuþu
 
-
-    //initGame(); // Ekran baþlatýldý
-    initWindow();                            // Pencereyi baþlat
+    initGame();
+    initWindow();
 
     pthread_t th1;
     pthread_create(&th1, NULL,printMenu,NULL);
@@ -149,7 +148,7 @@ void *printMenu(void *)
     init_pair(2, COLOR_RED, COLOR_BLACK);
 
 
-    while (true) // ENTER tuşuna basılmadığı sürece devam et
+    while (playingGame.IsGameRunning) // ENTER tuşuna basılmadığı sürece devam et
     {
         //clear();
         // Menü öğelerini ekrana yazdır
@@ -179,22 +178,32 @@ void *printMenu(void *)
         }
         if (key == KEYDOWN) // Aşağı ok tuşuna basıldığında
         {
-            selectedItem = (selectedItem + 1) % 6; // Seçili öğeyi bir sonraki öğeye taşı
+            selectedItem = (selectedItem + 1) % mainMenuItem; // Seçili öğeyi bir sonraki öğeye taşı
         }
         else if (key == KEYPUP) // Yukarı ok tuşuna basıldığında
         {
-            selectedItem = (selectedItem - 1 + 6) % 6; // Seçili öğeyi bir önceki öğeye taşı
+            selectedItem = (selectedItem - 1 + mainMenuItem) % mainMenuItem; // Seçili öğeyi bir önceki öğeye taşı
         }else if(key ==ENTER)
         {
-
+             clear();
+             pthread_t th2;
             switch(selectedItem)
             {
+
                 case 2:
-                     pthread_t th2;
                         pthread_create(&th2, NULL,printInstructor,NULL);
                         pthread_join(th2,NULL);
                     break;
+                case 3:
+                    pthread_create(&th2, NULL,printSettings,NULL);
+                    pthread_join(th2,NULL);
+                    break;
+                case 5:
+                    playingGame.IsGameRunning=false;
+                    break;
+
             }
+             clear();
         }
 
 
@@ -209,24 +218,75 @@ void *printMenu(void *)
 
 void *printInstructor(void *)
 {
-    clear();
-
-     // Yeşil renkteki metni yazdırmak için renk çiftini başlat
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
-    // Kırmızı renkteki metni yazdırmak için renk çiftini başlat
-    init_pair(2, COLOR_RED, COLOR_BLACK);
-
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);  // Yeşil renkteki metni yazdırmak için renk çiftini başlat
     attron(COLOR_PAIR(1));
-    for(int i=0;i<settingMenuItem;i++)
+    char instructMenu[4][50]={"< or A: moves the car to the left","> or D: moves the car to right","ESC: exist the game without saving","S: saves and exists the game"};
+
+    for(int i=0;i<4;i++)
     {
-         mvprintw(MENUY + (i * MENUDIF), MENUX,settingMenu[i]);
+         mvprintw(MENUY + (i * MENUDIF), MENUX,instructMenu[i]);
     }
     refresh();
     sleep(5);
-     clear();
 }
 
+void *printSettings(void *)
+{
+    int selectedItem = 0; // Seçili menü öğesinin indisini saklar
+    int key = -1; // Klavyeden alınacak tuş değeri için değişken
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    init_pair(2, COLOR_RED, COLOR_BLACK);
 
+
+    while (true) // ENTER tuşuna basılmadığı sürece devam et
+    {
+
+        for (int i = 0; i < settingMenuItem; i++)
+        {
+            if (i == selectedItem)
+            {
+                attron(COLOR_PAIR(2)); // Kırmızı renk çiftini etkinleştir
+                mvprintw(MENUY + (i * MENUDIF), MENUX - 2,"->");
+                mvprintw(MENUY + (i * MENUDIF), MENUX,settingMenu[i]); // Menü öğesini ekrana yazdır
+            }else
+            {
+                attron(COLOR_PAIR(1)); // Yeşil renk çiftini etkinleştir
+                mvprintw(MENUY + (i * MENUDIF), MENUX,settingMenu[i]); // Menü öğesini ekrana yazdır
+            }
+        }
+
+        attroff(COLOR_PAIR(1)); // Yeşil renk çiftini devre dışı bırak
+        attroff(COLOR_PAIR(2)); // Kırmızı renk çiftini devre dışı bırak
+
+        key = getch(); // Klavyeden giriş al
+        if(key != KEYERROR)
+        {
+            clear();
+        }
+        if (key == KEYDOWN) // Aşağı ok tuşuna basıldığında
+        {
+            selectedItem = (selectedItem + 1) % settingMenuItem; // Seçili öğeyi bir sonraki öğeye taşı
+        }
+        else if (key == KEYPUP) // Yukarı ok tuşuna basıldığında
+        {
+            selectedItem = (selectedItem - 1 + settingMenuItem) % settingMenuItem; // Seçili öğeyi bir önceki öğeye taşı
+        }else if(key ==ENTER)
+        {
+             switch(selectedItem)
+             {
+                case 0:
+                    playingGame.leftKey= leftKeyArrow;
+                    playingGame.rightKey= RightKeyArrow;
+                    break;
+                case 1:
+                    playingGame.leftKey= leftKeyA;
+                    playingGame.rightKey= RightKeyD;
+                    break;
+             }
+            break;
+        }
+    }
+}
 
 
 
