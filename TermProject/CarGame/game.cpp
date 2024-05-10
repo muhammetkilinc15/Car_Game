@@ -8,63 +8,63 @@
 #include <ctime>
 #include <string.h>
 
-// Ekranın boyutları
-#define wHeight 40 // Yolun yüksekliği
-#define wWidth 100 // Yolun genişliği
+// Ekranýn boyutlarý
+#define wHeight 40 // Yolun yüksekliði
+#define wWidth 100 // Yolun geniþliði
 
-// Orta çizgi ve bitiş koordinatları
-#define lineX 45 // Ortadaki çizginin x koordinatı
-#define lineLEN 10 // Orta çizginin başlangıc ve sonundan uzaklığı
-#define EXITY 35 // Yolun bitiş koordinatı
+// Orta çizgi ve bitiþ koordinatlarý
+#define lineX 45 // Ortadaki çizginin x koordinatý
+#define lineLEN 10 // Orta çizginin baþlangýc ve sonundan uzaklýðý
+#define EXITY 35 // Yolun bitiþ koordinatý
 
 // Klavye girdileri
-#define leftKeyArrow 260 // Sol ok tuşunun ASCII kodu
-#define RightKeyArrow 261 // Sağ ok tuşunun ASCII kodu
-#define leftKeyA 97 // A'nın ASCII kodu
+#define leftKeyArrow 260 // Sol ok tuþunun ASCII kodu
+#define RightKeyArrow 261 // Sað ok tuþunun ASCII kodu
+#define leftKeyA 97 // A'nýn ASCII kodu
 #define RightKeyD 100 // D'nin ASCII kodu
-#define ESC 27 // ESC tuşunun ASCII kodu
-#define ENTER 10 // ENTER tuşunun ASCII kodu
-#define KEYPUP 259 // Yukarı ok tuşunun ASCII kodu
-#define KEYDOWN 258 // Aşağı ok tuşunun ASCII kodu
-#define KEYERROR -1 // Yanlış bir tuşa basıldığında döndürülen ASCII kodu
+#define ESC 27 // ESC tuþunun ASCII kodu
+#define ENTER 10 // ENTER tuþunun ASCII kodu
+#define KEYPUP 259 // Yukarý ok tuþunun ASCII kodu
+#define KEYDOWN 258 // Aþaðý ok tuþunun ASCII kodu
+#define KEYERROR -1 // Yanlýþ bir tuþa basýldýðýnda döndürülen ASCII kodu
 #define SAVEKEY 115 // S'nin ASCII kodu
 
-// Seviye ve hız sınırları
-#define levelBound 300 // 300 puanı geçince seviyeyi artırmak için
+// Seviye ve hýz sýnýrlarý
+#define levelBound 300 // 300 puaný geçince seviyeyi artýrmak için
 #define MAXSLEVEL 5 // Maksimum seviye
-#define ISPEED 500000 // Oyun hareket hızı için başlangıç değeri
-#define DRATESPEED 100000 // Her yeni seviyeden sonra hareket hızını azaltmak için
+#define ISPEED 500000 // Oyun hareket hýzý için baþlangýç deðeri
+#define DRATESPEED 100000 // Her yeni seviyeden sonra hareket hýzýný azaltmak için
 
 // Araba özellikleri
-#define MINX 5 // Arabaların oluşturulurken minimum x koordinat değeri
-#define MINY 10 // Arabaların oluşturulurken maksimum y koordinat değeri
-#define MINH 5 // Arabaların oluşturulurken minimum yükseklik değeri
-#define MINW 5 // Arabaların oluşturulurken minimum genişlik değeri
-#define SPEEDOFCAR 3 // Oyuncu tarafından kullanılan arabanın hızı
-#define YOFCAR 34 // Oyuncu tarafından kullanılan arabanın y koordinatı
-#define XOFCAR 45 // Oyuncu tarafından kullanılan arabanın x koordinatı
-#define IDSTART 10 // Araba kimliği için başlangıç değeri
-#define IDMAX 20 // Araba kimliği için maksimum değer
-#define COLOROFCAR 3 // Oyuncu tarafından kullanılan arabanın renk değeri
-#define POINTX 91 // Puanın yazıldığı x koordinatı
-#define POINTY 42 // Puanın yazıldığı y koordinatı
+#define MINX 5 // Arabalarýn oluþturulurken minimum x koordinat deðeri
+#define MINY 10 // Arabalarýn oluþturulurken maksimum y koordinat deðeri
+#define MINH 5 // Arabalarýn oluþturulurken minimum yükseklik deðeri
+#define MINW 5 // Arabalarýn oluþturulurken minimum geniþlik deðeri
+#define SPEEDOFCAR 3 // Oyuncu tarafýndan kullanýlan arabanýn hýzý
+#define YOFCAR 34 // Oyuncu tarafýndan kullanýlan arabanýn y koordinatý
+#define XOFCAR 45 // Oyuncu tarafýndan kullanýlan arabanýn x koordinatý
+#define IDSTART 10 // Araba kimliði için baþlangýç deðeri
+#define IDMAX 20 // Araba kimliði için maksimum deðer
+#define COLOROFCAR 3 // Oyuncu tarafýndan kullanýlan arabanýn renk deðeri
+#define POINTX 91 // Puanýn yazýldýðý x koordinatý
+#define POINTY 42 // Puanýn yazýldýðý y koordinatý
 
 // Menü özellikleri
-#define MENUX 10 // Menülerin başlangıç satırı için x koordinatı
-#define MENUY 5 // Menülerin başlangıç satırı için y koordinatı
-#define MENUDIF 2 // Menü satırları arasındaki fark
-#define MENUDIFX 20 // Menü sütunları arasındaki fark
-#define MENSLEEPRATE 200000 // Menü giriş için bekleme süresi
-#define GAMESLEEPRATE 250000 // Oyuncu ok tuşları için bekleme süresi
+#define MENUX 10 // Menülerin baþlangýç satýrý için x koordinatý
+#define MENUY 5 // Menülerin baþlangýç satýrý için y koordinatý
+#define MENUDIF 2 // Menü satýrlarý arasýndaki fark
+#define MENUDIFX 20 // Menü sütunlarý arasýndaki fark
+#define MENSLEEPRATE 200000 // Menü giriþ için bekleme süresi
+#define GAMESLEEPRATE 250000 // Oyuncu ok tuþlarý için bekleme süresi
 
-// Diğer sabitler
+// Diðer sabitler
 #define EnQueueSleep 1 // EnQueue bekleme süresi
 #define DeQueueSleepMin 2 // DeQueue minimum bekleme süresi
-#define numOfcolors 4 // Arabalar için seçilebilecek maksimum renk değeri
-#define maxCarNumber 5 // Kuyruktaki maksimum araba sayısı
-#define numOfChars 3 // Arabalar için seçilebilecek maksimum desen sayısı
-#define settingMenuItem 2 // Ayarlar menüsündeki seçenek sayısı
-#define mainMenuItem 6 // Ana menüdeki seçenek sayısı
+#define numOfcolors 4 // Arabalar için seçilebilecek maksimum renk deðeri
+#define maxCarNumber 5 // Kuyruktaki maksimum araba sayýsý
+#define numOfChars 3 // Arabalar için seçilebilecek maksimum desen sayýsý
+#define settingMenuItem 2 // Ayarlar menüsündeki seçenek sayýsý
+#define mainMenuItem 6 // Ana menüdeki seçenek sayýsý
 using namespace std;
 
 
@@ -109,131 +109,188 @@ void initGame(); // Assigns initial values to all control parameters for the new
 void initWindow(); //Creates a new window and sets I/O settings
 
 
+void *printMenu(void *);
+
 int main()
 {
-    playingGame.leftKey = leftKeyArrow;
-    playingGame.rightKey = RightKeyArrow;
-    initGame(); // ekran baslatildi
-    initWindow();
-    pthread_t th1; //create new thread
-    pthread_create(&th1, NULL, newGame,NULL);// Run newGame function with thread
-    pthread_join(th1, NULL); //Wait for the thread to finish, when the newGame function finishes, the thread will also finish.
-    return 0;
+    playingGame.leftKey = leftKeyArrow;      // Oyuncunun aracýný sola yönlendirmek için atanmýþ sol ok tuþu
+    playingGame.rightKey = RightKeyArrow;    // Oyuncunun aracýný saða yönlendirmek için atanmýþ sað ok tuþu
+
+
+    //initGame(); // Ekran baþlatýldý
+    initWindow();                            // Pencereyi baþlat
+
+    pthread_t th1;
+    pthread_create(&th1, NULL,printMenu,NULL);
+    pthread_join(th1, NULL);
+
+
+    // Menüyü ekrana yazdýr
+
+    // pthread_t th1; // Yeni bir iþ parçacýðý oluþtur
+    // pthread_create(&th1, NULL, newGame, NULL); // newGame fonksiyonunu bir iþ parçacýðýnda çalýþtýr
+    // pthread_join(th1, NULL); // Ýþ parçacýðýnýn bitmesini bekleyin, newGame fonksiyonu bittiðinde iþ parçacýðý da sona erecektir.
+
+    return 0;                               // Programý normal þekilde sonlandýr
 }
 
 
-// init metodu ellenmicek
-void initGame()
+void *printMenu(void *)
 {
-    playingGame.cars = queue<Car>();
-    playingGame.counter =IDSTART;
-    playingGame.mutexFile = PTHREAD_MUTEX_INITIALIZER; //assigns the initial value for the mutex
-    playingGame.level = 1;
-    playingGame.moveSpeed = ISPEED;
-    playingGame.points = 0;
-    playingGame.IsSaveCliked = false;
-    playingGame.IsGameRunning = true;
-    playingGame.current.ID = IDSTART-1;
-    playingGame.current.height = MINH;
-    playingGame.current.width = MINW;
-    playingGame.current.speed = SPEEDOFCAR;
-    playingGame.current.x = XOFCAR;
-    playingGame.current.y = YOFCAR;
-    playingGame.current.clr = COLOROFCAR;
-    playingGame.current.chr = '*';
-}
+    int selectedItem = 0; // Seçili menü öğesinin indisini saklar
+    int key = -1; // Klavyeden alınacak tuş değeri için değişken
 
-// new game baslar baslamaz yolu ciziyor
-// kullanıcı
-void *newGame(void *)
-{
-    printWindow(); 
-    drawCar(playingGame.current,2,1); // Draw the car the player is driving on the screen
-    int key;
-    while (playingGame.IsGameRunning) { //continue until the game is over
-            key = getch(); //Get input for the player to press the arrow keys
-            if (key != KEYERROR) {
-                 if (key == playingGame.leftKey) { // If the left  key is pressed
-                        drawCar(playingGame.current,1,1); // removes player's car from screen
-                        playingGame.current.x-=playingGame.current.speed; // update position
-                        drawCar(playingGame.current,2,1); // draw player's car with new position
-                }
+    // Yeşil renkteki metni yazdırmak için renk çiftini başlat
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    // Kırmızı renkteki metni yazdırmak için renk çiftini başlat
+    init_pair(2, COLOR_RED, COLOR_BLACK);
+
+    // Menü öğelerini içeren metin dizisi
+    char text[6][50] =
+    {
+        "New Game",
+        "Load the last game",
+        "Instructions",
+        "Settings",
+        "Points",
+        "Exit"
+    };
+
+    while (key != ENTER) // ENTER tuşuna basılmadığı sürece devam et
+    {
+        //clear();
+        // Menü öğelerini ekrana yazdır
+        for (int i = 0; i < 6; i++)
+        {
+            // Seçili öğenin rengini belirle
+            if (i == selectedItem)
+            {
+
+                attron(COLOR_PAIR(2)); // Kırmızı renk çiftini etkinleştir
+                char strText[50];
+                sprintf(strText,"->%s",text[i]);
+                mvprintw(MENUY + (i * MENUDIF), MENUX,strText); // Menü öğesini ekrana yazdır
+            }else
+            {
+                attron(COLOR_PAIR(1)); // Yeşil renk çiftini etkinleştir
+                mvprintw(MENUY + (i * MENUDIF), MENUX,text[i]); // Menü öğesini ekrana yazdır
             }
-         usleep(GAMESLEEPRATE); // sleep  0.25 sn de bir gerceklestirecek
         }
+
+        attroff(COLOR_PAIR(1)); // Yeşil renk çiftini devre dışı bırak
+        attroff(COLOR_PAIR(2)); // Kırmızı renk çiftini devre dışı bırak
+
+        key = getch(); // Klavyeden giriş al
+        if(key!=KEYERROR)
+        {
+            clear();
+        }
+        if (key == KEYDOWN) // Aşağı ok tuşuna basıldığında
+        {
+            selectedItem = (selectedItem + 1) % 6; // Seçili öğeyi bir sonraki öğeye taşı
+        }
+        else if (key == KEYPUP) // Yukarı ok tuşuna basıldığında
+        {
+            selectedItem = (selectedItem - 1 + 6) % 6; // Seçili öğeyi bir önceki öğeye taşı
+        }
+
+
+        usleep(MENSLEEPRATE);
+    }
+    return NULL;
 }
+
+
+
 void initWindow()
 {
-	initscr();            // initialize the ncurses window
-	start_color();        // enable color manipulation
-	keypad(stdscr, true); // enable the keypad for the screen
-	nodelay(stdscr, true);// set the getch() function to non-blocking mode
-	curs_set(0);          // hide the cursor
-	cbreak();             // disable line buffering
-	noecho();             // don't echo characters entered by the user, ekrana a ya da d yazilmamasi icin
-	clear();              // clear the screen
-    sleep(1);
+	initscr();            // ncurses penceresini baþlat
+	start_color();        // renk iþlemlerini etkinleþtir
+	keypad(stdscr, true); // ekran için klavye giriþini etkinleþtir
+	nodelay(stdscr, true);// getch() fonksiyonunu bloklamayan modda ayarla
+	curs_set(0);          // imleci gizle
+	cbreak();             // satýr tamponlamayý devre dýþý býrak
+	noecho();             // kullanýcýnýn girdiðini ekrana yazma
+	clear();              // ekraný temizle
+    sleep(1);             // 1 saniye bekle
 }
+
+void initGame()
+{
+    playingGame.cars = queue<Car>();                        // araç kuyruðunu boþalt
+    playingGame.counter =IDSTART;                           // araç kimliði için baþlangýç deðerini ayarla
+    playingGame.mutexFile = PTHREAD_MUTEX_INITIALIZER;      // mutex için baþlangýç deðerini ata
+    playingGame.level = 1;                                  // seviye baþlangýç deðerini ayarla
+    playingGame.moveSpeed = ISPEED;                         // hareket hýzý baþlangýç deðerini ayarla
+    playingGame.points = 0;                                 // puan baþlangýç deðerini ayarla
+    playingGame.IsSaveCliked = false;                       // kaydetme butonunun baþlangýç durumunu ayarla
+    playingGame.IsGameRunning = true;                       // oyunun çalýþma durumunu ayarla
+    playingGame.current.ID = IDSTART-1;                     // kullanýcýnýn aracý için kimlik baþlangýç deðerini ayarla
+    playingGame.current.height = MINH;                      // kullanýcýnýn aracý için yükseklik baþlangýç deðerini ayarla
+    playingGame.current.width = MINW;                       // kullanýcýnýn aracý için geniþlik baþlangýç deðerini ayarla
+    playingGame.current.speed = SPEEDOFCAR;                 // kullanýcýnýn aracý için hýz baþlangýç deðerini ayarla
+    playingGame.current.x = XOFCAR;                         // kullanýcýnýn aracý için x koordinat baþlangýç deðerini ayarla
+    playingGame.current.y = YOFCAR;                         // kullanýcýnýn aracý için y koordinat baþlangýç deðerini ayarla
+    playingGame.current.clr = COLOROFCAR;                   // kullanýcýnýn aracý için renk baþlangýç deðerini ayarla
+    playingGame.current.chr = '*';                          // kullanýcýnýn aracý için karakter baþlangýç deðerini ayarla
+}
+
+void *newGame(void *)
+{
+    printWindow();                                          // yolun çizilmesini baþlat
+    drawCar(playingGame.current,2,1);                       // oyuncunun kullandýðý aracý ekrana çiz
+    int key;
+    while (playingGame.IsGameRunning) {                     // oyun sona erene kadar devam et
+            key = getch();                                   // oyuncunun yön tuþlarýný basmasý için girdiyi al
+            if (key != KEYERROR) {
+                 if (key == playingGame.leftKey) {          // sol ok tuþu basýldýðýnda
+                        drawCar(playingGame.current,1,1);  // oyuncunun aracýný ekrandan kaldýr
+                        playingGame.current.x-=playingGame.current.speed; // pozisyonu güncelle
+                        drawCar(playingGame.current,2,1);  // yeni pozisyonla oyuncunun aracýný çiz
+                }
+            }
+         usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
+        }
+}
+
 void printWindow()
 {
     for (int i = 1; i < wHeight - 1; ++i) {
-		//mvprintw: Used to print text on the window, paramters order: y , x , string
-        mvprintw(i, 2, "*"); //left side of the road
-        mvprintw(i, 0, "*"); 
-        mvprintw(i, wWidth - 1, "*");// right side of the road
+        mvprintw(i, 2, "*");                                 // yolun sol tarafýný çiz
+        mvprintw(i, 0, "*");
+        mvprintw(i, wWidth - 1, "*");                        // yolun sað tarafýný çiz
         mvprintw(i, wWidth - 3, "*");
     }
-    for (int i = lineLEN; i < wHeight -lineLEN ; ++i) { //line in the middle of the road
+    for (int i = lineLEN; i < wHeight -lineLEN ; ++i) {      // yolun ortasýndaki çizgiyi çiz
         mvprintw(i, lineX, "#");
     }
 }
 
-
-// type 2 oldugu zaman ciz , 1 oldugu zaman sil
 void drawCar(Car c, int type, int direction )
 {
-	//If the user does not want to exit the game and the game continues
-    if(playingGame.IsSaveCliked!=true && playingGame.IsGameRunning==true)
+    if(playingGame.IsSaveCliked!=true && playingGame.IsGameRunning==true)  // oyun bitmediyse ve kaydetme týklanmadýysa
     {
-
-            init_pair(c.ID, c.clr, 0);// Creates a color pair: init_pair(short pair ID, short foregroundcolor, short backgroundcolor);
-                                                //0: Black (COLOR_BLACK)
-                                                //1: Red (COLOR_RED)
-                                                //2: Green (COLOR_GREEN)
-                                                //3: Yellow (COLOR_YELLOW)
-                                                //4: Blue (COLOR_BLUE)
-			attron(COLOR_PAIR(c.ID));//enable color pair
+            init_pair(c.ID, c.clr, 0);                       // renk çiftini baþlat
+            attron(COLOR_PAIR(c.ID));                        // renk çiftini etkinleþtir
             char drawnChar;
-            if (type == 1 ) 
-               drawnChar = ' '; // to remove car
+            if (type == 1 )
+               drawnChar = ' ';                              // aracý kaldýrmak için boþluk karakteri
             else
-               drawnChar= c.chr; //  to draw char
-		    //mvhline: used to draw a horizontal line in the window
-			//shallow. : mvhline(int y, int x, chtype ch, int n)
-			//y: horizontal coordinate
-			//x: vertical coordinate
-			//ch: character to use
-			//n: Length of the line
-            mvhline(c.y, c.x, drawnChar, c.width);// top line of rectangle
-            mvhline(c.y + c.height - 1, c.x, drawnChar, c.width); //bottom line of rectangle
-            if(direction == 0) // If it is any car on the road
-                mvhline(c.y + c.height, c.x, drawnChar, c.width); 
-            else //player's card
+               drawnChar= c.chr;                             // aracý çizmek için karakter
+            mvhline(c.y, c.x, drawnChar, c.width);           // dikdörtgenin üst çizgisi
+            mvhline(c.y + c.height - 1, c.x, drawnChar, c.width); // dikdörtgenin alt çizgisi
+            if(direction == 0) // Eðer yolda baþka bir araç varsa
+                mvhline(c.y + c.height, c.x, drawnChar, c.width);
+            else // oyuncunun aracý
                 mvhline(c.y -1, c.x, drawnChar, c.width);
-		    //mvvline: used to draw a vertical line in the window
-			//shallow. : mvhline(int y, int x, chtype ch, int n)
-			//y: horizontal coordinate
-			//x: vertical coordinate
-			//ch: character to use
-			//n: Length of the line
-            mvvline(c.y, c.x, drawnChar, c.height); //left line of rectangle
-            mvvline(c.y, c.x + c.width - 1, drawnChar, c.height); //right line of rectangle
+            mvvline(c.y, c.x, drawnChar, c.height);          // dikdörtgenin sol çizgisi
+            mvvline(c.y, c.x + c.width - 1, drawnChar, c.height); // dikdörtgenin sað çizgisi
             char text[5];
             if (type == 1 )
-                sprintf(text,"  "); //to remove point 
+                sprintf(text,"  ");                          // puaný kaldýrmak için boþluk karakteri
             else
-                 sprintf(text,"%d",c.height * c.width); // to show car's point in rectangle
-            mvprintw(c.y+1, c.x +1, text);// display car's point in rectangle
-            attroff(COLOR_PAIR(c.ID));// disable color pair
+                 sprintf(text,"%d",c.height * c.width);      // dikdörtgenin puanýný göstermek için
+            mvprintw(c.y+1, c.x +1, text);                    // dikdörtgenin puanýný ekrana yazdýr
+            attroff(COLOR_PAIR(c.ID));                        // renk çiftini devre dýþý býrak
     }
 }
