@@ -15,7 +15,7 @@
 // Orta çizgi ve bitiþ koordinatlarý
 #define lineX 45 // Ortadaki çizginin x koordinatý
 #define lineLEN 10 // Orta çizginin baþlangýc ve sonundan uzaklýðý
-#define EXITY 35 // Yolun bitiþ koordinatý
+#define EXITY 35 // Yolun bitis koordinatý
 
 // Klavye girdileri
 #define leftKeyArrow 260 // Sol ok tuþunun ASCII kodu
@@ -110,9 +110,10 @@ void initWindow(); //Creates a new window and sets I/O settings
 
 
 void *printMenu(void *);
-void *printInstructor(void *);
-void *printSettings(void *);
-
+void printInstructor();
+void printSettings();
+void printPoint();
+void printInstructor();
 int main()
 {
     playingGame.leftKey = leftKeyArrow;      // Oyuncunun aracýný sola yönlendirmek için atanmýþ sol ok tuþu
@@ -126,11 +127,11 @@ int main()
     pthread_join(th1, NULL);
 
 
-    // Menüyü ekrana yazdýr
 
-    // pthread_t th1; // Yeni bir iþ parçacýðý oluþtur
-    // pthread_create(&th1, NULL, newGame, NULL); // newGame fonksiyonunu bir iþ parçacýðýnda çalýþtýr
-    // pthread_join(th1, NULL); // Ýþ parçacýðýnýn bitmesini bekleyin, newGame fonksiyonu bittiðinde iþ parçacýðý da sona erecektir.
+     pthread_t th2; // Yeni bir iþ parçacýðý oluþtur
+
+     pthread_create(&th2, NULL, newGame, NULL); // newGame fonksiyonunu bir iþ parçacýðýnda çalýþtýr
+     pthread_join(th2, NULL); // Ýþ parçacýðýnýn bitmesini bekleyin, newGame fonksiyonu bittiðinde iþ parçacýðý da sona erecektir.
 
     return 0;                               // Programý normal þekilde sonlandýr
 }
@@ -142,12 +143,6 @@ void *printMenu(void *)
     int selectedItem = 0; // Seçili menü öğesinin indisini saklar
     int key = -1; // Klavyeden alınacak tuş değeri için değişken
 
-    // Yeşil renkteki metni yazdırmak için renk çiftini başlat
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
-    // Kırmızı renkteki metni yazdırmak için renk çiftini başlat
-    init_pair(2, COLOR_RED, COLOR_BLACK);
-
-
     while (playingGame.IsGameRunning) // ENTER tuşuna basılmadığı sürece devam et
     {
         //clear();
@@ -157,7 +152,6 @@ void *printMenu(void *)
             // Seçili öğenin rengini belirle
             if (i == selectedItem)
             {
-
                 attron(COLOR_PAIR(2)); // Kırmızı renk çiftini etkinleştir
                 mvprintw(MENUY + (i * MENUDIF), MENUX - 2,"->");
                 mvprintw(MENUY + (i * MENUDIF), MENUX,mainMenu[i]); // Menü öğesini ekrana yazdır
@@ -185,40 +179,38 @@ void *printMenu(void *)
             selectedItem = (selectedItem - 1 + mainMenuItem) % mainMenuItem; // Seçili öğeyi bir önceki öğeye taşı
         }else if(key ==ENTER)
         {
-             clear();
              pthread_t th2;
+             clear();
             switch(selectedItem)
             {
-
+                case 0:
+                        pthread_create(&th2, NULL, newGame, NULL); // newGame fonksiyonunu bir iþ parçacýðýnda çalýþtýr
+                        pthread_join(th2, NULL);
+                    break;
                 case 2:
-                        pthread_create(&th2, NULL,printInstructor,NULL);
-                        pthread_join(th2,NULL);
+                        printInstructor();
                     break;
                 case 3:
-                    pthread_create(&th2, NULL,printSettings,NULL);
-                    pthread_join(th2,NULL);
+                     printSettings();
                     break;
+                case 4:
+                         initWindow();
+                         printPoint();
+                        break;
                 case 5:
                     playingGame.IsGameRunning=false;
                     break;
-
             }
-             clear();
+            clear();
         }
-
-
         usleep(MENSLEEPRATE);
     }
     return NULL;
 }
 
 
-
-
-
-void *printInstructor(void *)
+void printInstructor()
 {
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);  // Yeşil renkteki metni yazdırmak için renk çiftini başlat
     attron(COLOR_PAIR(1));
     char instructMenu[4][50]={"< or A: moves the car to the left","> or D: moves the car to right","ESC: exist the game without saving","S: saves and exists the game"};
 
@@ -230,13 +222,11 @@ void *printInstructor(void *)
     sleep(5);
 }
 
-void *printSettings(void *)
+//void *printSettings(void *)
+void printSettings()
 {
     int selectedItem = 0; // Seçili menü öğesinin indisini saklar
     int key = -1; // Klavyeden alınacak tuş değeri için değişken
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
-    init_pair(2, COLOR_RED, COLOR_BLACK);
-
 
     while (true) // ENTER tuşuna basılmadığı sürece devam et
     {
@@ -288,6 +278,44 @@ void *printSettings(void *)
     }
 }
 
+void printPoint()
+{
+    FILE *file = fopen(pointsTxt,"r");
+    attron(COLOR_PAIR(1));
+    int column = MENUX; // İlk sütunun başlangıç koordinatı
+    int counter = 0; // Toplam oyun sayacı
+    int x = MENUY; // Yükseklik koordinatı
+
+    if (file != NULL) {
+        int point;
+        while (fscanf(file, "%d", &point) != EOF)
+        {
+            counter++; // Her puan alındığında toplam oyun sayısını artır
+            char text[50];
+            sprintf(text, "Game %d : %d", counter, point); // Yazdırılacak metni oluştur
+            mvprintw(x, column, text); // Metni ekrana yazdır
+            if (counter % 10 == 0)
+            {
+                column += MENUDIFX; // Her 10 oyun sonrasında sütunları kaydır
+                x = MENUY; // Yeni sütunda yükseklik koordinatını sıfırla
+            }
+            else
+            {
+                x += MENUDIF; // Her puan sonrasında yükseklik koordinatını artır
+            }
+        }
+        fclose(file);
+    }
+    else
+    {
+        mvprintw(MENUY, MENUX, "Error: Cannot open points file");
+    }
+    refresh();
+    sleep(5);
+}
+
+
+
 
 
 void initWindow()
@@ -301,6 +329,8 @@ void initWindow()
 	noecho();             // kullanýcýnýn girdiðini ekrana yazma
 	clear();              // ekranı temizle
     sleep(1);             // 1 saniye bekle
+    init_pair(1, COLOR_GREEN, COLOR_BLACK); // Yeşil rengi aktifleştirir
+    init_pair(2, COLOR_RED, COLOR_BLACK); // kırmızı rengi aktifleştirir
 }
 
 
@@ -329,13 +359,18 @@ void *newGame(void *)
     printWindow();                                          // yolun çizilmesini baþlat
     drawCar(playingGame.current,2,1);                       // oyuncunun kullandýðý aracý ekrana çiz
     int key;
-    while (playingGame.IsGameRunning) {                     // oyun sona erene kadar devam et
+    while (playingGame.IsGameRunning && key!=ESC) {                     // oyun sona erene kadar devam et
             key = getch();                                   // oyuncunun yön tuþlarýný basmasý için girdiyi al
             if (key != KEYERROR) {
                  if (key == playingGame.leftKey) {          // sol ok tuþu basýldýðýnda
                         drawCar(playingGame.current,1,1);  // oyuncunun aracýný ekrandan kaldýr
                         playingGame.current.x-=playingGame.current.speed; // pozisyonu güncelle
                         drawCar(playingGame.current,2,1);  // yeni pozisyonla oyuncunun aracýný çiz
+                }else if(key == playingGame.rightKey)
+                {
+                    drawCar(playingGame.current,1,1);  // oyuncunun aracýný ekrandan kaldýr
+                    playingGame.current.x+=playingGame.current.speed; // pozisyonu güncelle
+                    drawCar(playingGame.current,2,1);  // yeni po
                 }
             }
          usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
@@ -345,13 +380,27 @@ void *newGame(void *)
 void printWindow()
 {
     for (int i = 1; i < wHeight - 1; ++i) {
-        mvprintw(i, 2, "*");                                 // yolun sol tarafýný çiz
+        mvprintw(i, 2, "*");                                 // yolun sol tarafına çiz
         mvprintw(i, 0, "*");
-        mvprintw(i, wWidth - 1, "*");                        // yolun sað tarafýný çiz
+        mvprintw(i, wWidth - 1, "*");                        // yolun sag tarafýný çiz
         mvprintw(i, wWidth - 3, "*");
     }
-    for (int i = lineLEN; i < wHeight -lineLEN ; ++i) {      // yolun ortasýndaki çizgiyi çiz
+    for (int i = lineLEN; i < wHeight -lineLEN ; ++i) {      // yolun ortasına çizgiyi çiz
         mvprintw(i, lineX, "#");
+    }
+
+       // Ağaçları çiz
+    attron(COLOR_PAIR(1));
+    char tree[4] = "";
+    int x=2;
+    for(int i=1;i<=3;i++)
+    {
+        for(int j=1;j<=x;j++)
+        {
+            mvprintw(i,wWidth+5," ");
+            x-=2;
+        }
+
     }
 }
 
