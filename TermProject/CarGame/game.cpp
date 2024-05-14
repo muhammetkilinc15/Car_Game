@@ -109,11 +109,13 @@ void initGame(); // Assigns initial values to all control parameters for the new
 void initWindow(); //Creates a new window and sets I/O settings
 
 
-void *printMenu(void *);
+
+void printMenu();
 void printInstructor();
 void printSettings();
 void printPoint();
 void printInstructor();
+void *generateCar(void *);
 int main()
 {
     playingGame.leftKey = leftKeyArrow;      // Oyuncunun aracýný sola yönlendirmek için atanmýþ sol ok tuþu
@@ -121,11 +123,7 @@ int main()
 
     initGame();
     initWindow();
-
-    pthread_t th1;
-    pthread_create(&th1, NULL,printMenu,NULL);
-    pthread_join(th1, NULL);
-
+    printMenu();
 
 
      pthread_t th2; // Yeni bir iþ parçacýðý oluþtur
@@ -137,9 +135,8 @@ int main()
 }
 
 
-void *printMenu(void *)
+void printMenu()
 {
-
     int selectedItem = 0; // Seçili menü öğesinin indisini saklar
     int key = -1; // Klavyeden alınacak tuş değeri için değişken
 
@@ -205,7 +202,6 @@ void *printMenu(void *)
         }
         usleep(MENSLEEPRATE);
     }
-    return NULL;
 }
 
 
@@ -222,7 +218,7 @@ void printInstructor()
     sleep(5);
 }
 
-//void *printSettings(void *)
+
 void printSettings()
 {
     int selectedItem = 0; // Seçili menü öğesinin indisini saklar
@@ -360,7 +356,13 @@ void *newGame(void *)
     drawCar(playingGame.current,2,1);                       // oyuncunun kullandýðý aracý ekrana çiz
     int key;
     while (playingGame.IsGameRunning && key!=ESC) {                     // oyun sona erene kadar devam et
-            key = getch();                                   // oyuncunun yön tuþlarýný basmasý için girdiyi al
+
+
+
+            pthread_t th2;
+            pthread_create(&th2, NULL, generateCar, NULL);
+            key = getch();
+
             if (key != KEYERROR) {
                  if (key == playingGame.leftKey) {          // sol ok tuþu basýldýðýnda
                         drawCar(playingGame.current,1,1);  // oyuncunun aracýný ekrandan kaldýr
@@ -377,31 +379,33 @@ void *newGame(void *)
         }
 }
 
-void printWindow()
+void *moveCar(void *car)
 {
-    for (int i = 1; i < wHeight - 1; ++i) {
-        mvprintw(i, 2, "*");                                 // yolun sol tarafına çiz
-        mvprintw(i, 0, "*");
-        mvprintw(i, wWidth - 1, "*");                        // yolun sag tarafýný çiz
-        mvprintw(i, wWidth - 3, "*");
-    }
-    for (int i = lineLEN; i < wHeight -lineLEN ; ++i) {      // yolun ortasına çizgiyi çiz
-        mvprintw(i, lineX, "#");
-    }
+    srand(time(NULL));
+    int speed = 1 + rand() % car.speed;
 
-       // Ağaçları çiz
-    attron(COLOR_PAIR(1));
-    char tree[4] = "";
-    int x=2;
-    for(int i=1;i<=3;i++)
-    {
-        for(int j=1;j<=x;j++)
+
+}
+void *generateCar(void *)
+{
+    init_pair(3, COLOR_YELLOW, COLOR_BLACK); // kırmızı rengi aktifleştirir
+    init_pair(4, COLOR_BLUE, COLOR_BLACK); // Yeşil rengi aktifleştirir
+
+         Car newCar;
+        while(playingGame.cars.size()< 5)
         {
-            mvprintw(i,wWidth+5," ");
-            x-=2;
+         newCar.clr = 2;
+         newCar.ID =31;
+         newCar.x = 10;
+         newCar.y=  7;
+         newCar.height = 8;
+         newCar.width=7;
+         newCar.speed = newCar.height / 2;
+         newCar.chr = '#';
+         drawCar(newCar,2,2);
+         sleep(1);
         }
 
-    }
 }
 
 void drawCar(Car c, int type, int direction )
@@ -430,5 +434,33 @@ void drawCar(Car c, int type, int direction )
                  sprintf(text,"%d",c.height * c.width);      // dikdörtgenin puanýný göstermek için
             mvprintw(c.y+1, c.x +1, text);                    // dikdörtgenin puanýný ekrana yazdýr
             attroff(COLOR_PAIR(c.ID));                        // renk çiftini devre dýþý býrak
+    }
+}
+
+
+
+
+
+void printWindow()
+{
+    for (int i = 1; i < wHeight - 1; ++i) {
+        mvprintw(i, 2, "*");                                 // yolun sol tarafına çiz
+        mvprintw(i, 0, "*");
+        mvprintw(i, wWidth - 1, "*");                        // yolun sag tarafýný çiz
+        mvprintw(i, wWidth - 3, "*");
+    }
+    for (int i = lineLEN; i < wHeight -lineLEN ; ++i) {      // yolun ortasına çizgiyi çiz
+        mvprintw(i, lineX, "#");
+    }
+       // Ağaçları çiz
+    attron(COLOR_PAIR(1));
+    char tree[4] = "";
+    for(int i=1;i<=3;i++)
+    {
+        for(int j=1;j<=i;j++)
+        {
+            mvaddch(i,wWidth+5+j,'*');
+        }
+
     }
 }
