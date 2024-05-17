@@ -137,7 +137,7 @@ void printMenu()
     int selectedItem = 0; // Seçili menü öğesinin indisini saklar
     int key = -1; // Klavyeden alınacak tuş değeri için değişken
 
-    while (playingGame.IsGameRunning) // ENTER tuşuna basılmadığı sürece devam et
+    while (true) // ENTER tuşuna basılmadığı sürece devam et
     {
         //clear();
         // Menü öğelerini ekrana yazdır
@@ -197,6 +197,10 @@ void printMenu()
                     playingGame.IsGameRunning=false;
                     break;
             }
+			if(playingGame.IsGameRunning == false)
+			{
+				printMenu();
+			}
             endwin();
             clear();
         }
@@ -382,11 +386,12 @@ void *newGame(void *)
 void *moveCar(void *data) {
     srand(time(NULL));
     bool isCarExit = false;
-        while (playingGame.IsGameRunning && !isCarExit) {
+	bool isCarCrash = false;
+        while (playingGame.IsGameRunning && !isCarExit && !isCarCrash) {
             Car *currentCar = (Car *)data;
             // Aracın yolu terk ettiğinde
             while (true) {
-                drawCar(*currentCar, 1, 2); // Aracı sil
+                drawCar(*currentCar, 1, 1); // Aracı sil
                 currentCar[0].y += 1 + rand() % currentCar[0].speed;
 
                 if (currentCar[0].y >= EXITY) {
@@ -394,9 +399,16 @@ void *moveCar(void *data) {
                     isCarExit = true;
                     break;
                 }
+				
+				if((currentCar[0].y == playingGame.current.y))
+				{
+					isCarCrash = true;
+					playingGame.IsGameRunning = false;
+					break;
+				}
 
-                drawCar(*currentCar, 2, 2);
-                sleep(currentCar[0].speed);
+                drawCar(*currentCar, 2, 1);
+				usleep(playingGame.moveSpeed - currentCar[0].speed);
             }
     }
 }
