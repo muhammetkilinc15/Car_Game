@@ -127,8 +127,6 @@ int main()
     initWindow();
     printMenu();
     pthread_t th2; // Yeni bir iþ parçacýðý oluþtur
-    pthread_create(&th2, NULL, newGame, NULL); // newGame fonksiyonunu bir iþ parçacýðýnda çalýþtýr
-    pthread_join(th2, NULL); // Ýþ parçacýðýnýn bitmesini bekleyin, newGame fonksiyonu bittiðinde iþ parçacýðý da sona erecektir.
 
     return 0;                               // Programý normal þekilde sonlandýr
 }
@@ -175,8 +173,10 @@ void printMenu()
             selectedItem = (selectedItem - 1 + mainMenuItem) % mainMenuItem; // Seçili öğeyi bir önceki öğeye taşı
         }else if(key ==ENTER)
         {
-             pthread_t th2;
-             clear();
+            pthread_t th2;
+            clear();
+			endwin();
+			initWindow();
             switch(selectedItem)
             {
                 case 0:
@@ -379,8 +379,13 @@ void *newGame(void *)
                     drawCar(playingGame.current,2,1);  // yeni po
                 }
             }
-         usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
-        }
+        usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
+    }
+	pthread_cancel(moveCarThread1);
+	pthread_cancel(moveCarThread2);
+	pthread_cancel(moveCarThread3);
+	pthread_cancel(moveCarThread4);
+	pthread_cancel(moveCarThread5);
 }
 
 
@@ -398,7 +403,6 @@ void *moveCar(void *) {
                 // Eğer araba yolu terk ederse
                 if (frontCar.y >= EXITY) {
                     playingGame.points += frontCar.height * frontCar.width; // Puanı güncelle
-                    printPoint(); // Puanı ekrana yazdır
                     break; // Döngüden çık
                 }
 
@@ -410,7 +414,6 @@ void *moveCar(void *) {
             }
         }
     }
-    pthread_exit(NULL); // Thread'i sonlandır
 }
 
 
@@ -439,7 +442,6 @@ void *enqueue(void *) {
             usleep((rand() % 3000) + 2000); // 2-4 saniye arasında beklet
         }
     }
-    pthread_exit(NULL); // Thread'i sonlandır
     //(rand() % numOfcolors) + 1
 }
 
