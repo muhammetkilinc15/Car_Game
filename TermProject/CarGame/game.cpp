@@ -404,14 +404,16 @@ void *moveCar(void *data) {
 // Dequeue
 void *Dequeue(void *) {
     srand(time(NULL));
-    pthread_t moveProcess[10];
+	int i = 0;
+	pthread_t moveProcess;
     while (playingGame.IsGameRunning) { // Oyun devam ettiği sürece
           sleep((rand() % 2) + 2);
         if (!playingGame.cars.empty()) {
-            Car currentCar = playingGame.cars.front();
+            Car *currentCar = new Car(playingGame.cars.front());
             playingGame.cars.pop();
-            pthread_create(&moveProcess, NULL, moveCar,(void *) &currentCar);
+            pthread_create(&moveProcess, NULL, moveCar,(void *) currentCar);
         }
+		i++;
     }
 }
 
