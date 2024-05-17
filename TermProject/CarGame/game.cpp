@@ -117,18 +117,18 @@ void printPoint();
 void printInstructor();
 void *generateCar(void *);
 void *enqueue(void *);
-void *moveCar(void *);
+void *moveCar(void *data);
+void *Dequeue(void *);
 int main()
 {
-    playingGame.leftKey = leftKeyArrow;      // Oyuncunun aracýný sola yönlendirmek için atanmýþ sol ok tuþu
-    playingGame.rightKey = RightKeyArrow;    // Oyuncunun aracýný saða yönlendirmek için atanmýþ sað ok tuþu
-
+    playingGame.leftKey = leftKeyArrow;
+    playingGame.rightKey = RightKeyArrow;
     initGame();
     initWindow();
     printMenu();
-    pthread_t th2; // Yeni bir iþ parçacýðý oluþtur
+    pthread_t th2;
 
-    return 0;                               // Programý normal þekilde sonlandýr
+    return 0;
 }
 
 
@@ -175,12 +175,12 @@ void printMenu()
         {
             pthread_t th2;
             clear();
-			endwin();
+
 			initWindow();
             switch(selectedItem)
             {
                 case 0:
-                        pthread_create(&th2, NULL, newGame, NULL); // newGame fonksiyonunu bir iþ parçacýðýnda çalýþtýr
+                        pthread_create(&th2, NULL, newGame, NULL);
                         pthread_join(th2, NULL);
                     break;
                 case 2:
@@ -197,6 +197,7 @@ void printMenu()
                     playingGame.IsGameRunning=false;
                     break;
             }
+            endwin();
             clear();
         }
         usleep(MENSLEEPRATE);
@@ -354,64 +355,62 @@ void *newGame(void *)
     printWindow();                                          // yolun çizilmesini baþlat
     drawCar(playingGame.current,2,1);                       // oyuncunun kullandýðý aracý ekrana çiz
     int key;
-    pthread_t enqueueThread;
+    pthread_t enqueueThread , dequeueThread;
     pthread_create(&enqueueThread, NULL, enqueue, NULL);
-
-    // Araç hareket etme thread'leri
-    pthread_t moveCarThread1, moveCarThread2, moveCarThread3, moveCarThread4, moveCarThread5;
-    pthread_create(&moveCarThread1, NULL, moveCar, NULL);
-    pthread_create(&moveCarThread2, NULL, moveCar, NULL);
-    pthread_create(&moveCarThread3, NULL, moveCar, NULL);
-    pthread_create(&moveCarThread4, NULL, moveCar, NULL);
-    pthread_create(&moveCarThread5, NULL, moveCar, NULL);
-
+    pthread_create(&dequeueThread, NULL, Dequeue, NULL);
     while (playingGame.IsGameRunning && key!=ESC) {                     // oyun sona erene kadar devam et
             key = getch();
             if (key != KEYERROR) {
-                 if (key == playingGame.leftKey) {          // sol ok tuþu basýldýðýnda
-                        drawCar(playingGame.current,1,1);  // oyuncunun aracýný ekrandan kaldýr
-                        playingGame.current.x-=playingGame.current.speed; // pozisyonu güncelle
-                        drawCar(playingGame.current,2,1);  // yeni pozisyonla oyuncunun aracýný çiz
-                }else if(key == playingGame.rightKey)
+                 if (key == playingGame.leftKey && playingGame.current.x-playingGame.current.speed>2 ) {
+                        drawCar(playingGame.current,1,1);
+                        playingGame.current.x-=playingGame.current.speed;
+                        drawCar(playingGame.current,2,1);
+                } else if(key == playingGame.rightKey && playingGame.current.x+playingGame.current.speed<93)
                 {
-                    drawCar(playingGame.current,1,1);  // oyuncunun aracýný ekrandan kaldýr
-                    playingGame.current.x+=playingGame.current.speed; // pozisyonu güncelle
-                    drawCar(playingGame.current,2,1);  // yeni po
+                    drawCar(playingGame.current,1,1);
+                    playingGame.current.x+=playingGame.current.speed;
+                    drawCar(playingGame.current,2,1);
                 }
             }
         usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
     }
-	pthread_cancel(moveCarThread1);
-	pthread_cancel(moveCarThread2);
-	pthread_cancel(moveCarThread3);
-	pthread_cancel(moveCarThread4);
-	pthread_cancel(moveCarThread5);
 }
 
 
-void *moveCar(void *) {
-    while (playingGame.IsGameRunning) {
-        if (!playingGame.cars.empty()) {
-            Car frontCar = playingGame.cars.front();
-            playingGame.cars.pop();
 
+
+void *moveCar(void *data) {
+    srand(time(NULL));
+    bool isCarExit = false;
+        while (playingGame.IsGameRunning && !isCarExit) {
+            Car *currentCar = (Car *)data;
             // Aracın yolu terk ettiğinde
-            while (frontCar.y < EXITY) {
-                drawCar(frontCar, 1, 2); // Aracı sil
-                frontCar.y++; // Y koordinatını güncelle
+            while (true) {
+                drawCar(*currentCar, 1, 2); // Aracı sil
+                currentCar[0].y += 1 + rand() % currentCar[0].speed;
 
-                // Eğer araba yolu terk ederse
-                if (frontCar.y >= EXITY) {
-                    playingGame.points += frontCar.height * frontCar.width; // Puanı güncelle
-                    break; // Döngüden çık
+                if (currentCar[0].y >= EXITY) {
+                    playingGame.points += currentCar[0].height * currentCar[0].width;
+                    isCarExit = true;
+                    break;
                 }
 
-                // Çarpışma kontrolü (Henüz işlevsel değil, çarpışma kontrolü eklenmeli)
-                // Bu kısımda çarpışma kontrolü gerçekleştirilmeli
-
-                drawCar(frontCar, 2, 2); // Yeni konumda aracı çiz
-                usleep(playingGame.moveSpeed); // Hızına göre bekle
+                drawCar(*currentCar, 2, 2);
+                sleep(currentCar[0].speed);
             }
+    }
+}
+
+// Dequeue
+void *Dequeue(void *) {
+    srand(time(NULL));
+    pthread_t moveProcess[10];
+    while (playingGame.IsGameRunning) { // Oyun devam ettiği sürece
+          sleep((rand() % 2) + 2);
+        if (!playingGame.cars.empty()) {
+            Car currentCar = playingGame.cars.front();
+            playingGame.cars.pop();
+            pthread_create(&moveProcess, NULL, moveCar,(void *) &currentCar);
         }
     }
 }
@@ -429,20 +428,18 @@ void *enqueue(void *) {
             newCar.height = (rand() % 3) + 5;
             newCar.width = (rand() % 3) + 5;
             newCar.speed = newCar.height / 2;
-            newCar.clr = 2;
+            newCar.clr = (rand() % numOfcolors) + 1;
             int randomType = (rand() % numOfChars) + 1;
             newCar.chr = randomType == 1 ? '*' : randomType == 2 ? '#' : '+';
             playingGame.counter += 1;
-
             if (playingGame.counter == IDMAX)
                 playingGame.counter = IDSTART;
 
             playingGame.cars.push(newCar); // Oluşturulan aracı kuyruğa ekle
 
-            usleep((rand() % 3000) + 2000); // 2-4 saniye arasında beklet
+            sleep(1); // 2-4 saniye arasında beklet
         }
     }
-    //(rand() % numOfcolors) + 1
 }
 
 void drawCar(Car c, int type, int direction )
@@ -473,8 +470,8 @@ void drawCar(Car c, int type, int direction )
             else
 
             sprintf(text,"%d",c.height * c.width);      // dikdörtgenin puanýný göstermek için
-            mvprintw(c.y+1, c.x +1, text);                    // dikdörtgenin puanýný ekrana yazdýr
-            attroff(COLOR_PAIR(c.ID));                        // renk çiftini devre dýþý býrak
+            mvprintw(c.y+1, c.x +1, text);              // dikdörtgenin puanýný ekrana yazdýr
+            attroff(COLOR_PAIR(c.ID));                   // renk çiftini devre dýþý býrak
     }
 }
 
