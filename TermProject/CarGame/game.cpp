@@ -135,13 +135,12 @@ int main()
 
 void printMenu()
 {
+	endwin();
     int selectedItem = 0; // Seçili menü öğesinin indisini saklar
     int key = -1; // Klavyeden alınacak tuş değeri için değişken
 
     while (true) // ENTER tuşuna basılmadığı sürece devam et
     {
-        //clear();
-        // Menü öğelerini ekrana yazdır
         for (int i = 0; i < mainMenuItem; i++)
         {
             // Seçili öğenin rengini belirle
@@ -192,18 +191,14 @@ void printMenu()
                      printSettings();
                     break;
                 case 4:
-                         initWindow();
                          printPoint();
                         break;
                 case 5:
                     playingGame.IsGameRunning=false;
                     break;
             }
-			if(playingGame.IsGameRunning == false)
-			{
-				printMenu();
-			}
-            endwin();
+			endwin();
+			initWindow();
             clear();
         }
         usleep(MENSLEEPRATE);
@@ -213,6 +208,8 @@ void printMenu()
 
 void printInstructor()
 {
+	endwin();
+	initWindow();
     attron(COLOR_PAIR(1));
     char instructMenu[4][50]={"< or A: moves the car to the left","> or D: moves the car to right","ESC: exist the game without saving","S: saves and exists the game"};
 
@@ -227,6 +224,8 @@ void printInstructor()
 
 void printSettings()
 {
+	endwin();
+	initWindow();
     int selectedItem = 0; // Seçili menü öğesinin indisini saklar
     int key = -1; // Klavyeden alınacak tuş değeri için değişken
 
@@ -282,6 +281,8 @@ void printSettings()
 
 void printPoint()
 {
+	endwin();
+	initWindow();
     FILE *file = fopen(pointsTxt,"r");
     attron(COLOR_PAIR(1));
     int column = MENUX; // İlk sütunun başlangıç koordinatı
@@ -358,13 +359,15 @@ void initGame()
 
 void *newGame(void *)
 {
+	endwin();
+	initWindow();
     printWindow();                                          // yolun çizilmesini baþlat
     drawCar(playingGame.current,2,1);                       // oyuncunun kullandýðý aracý ekrana çiz
     int key;
     pthread_t enqueueThread , dequeueThread;
     pthread_create(&enqueueThread, NULL, enqueue, NULL);
     pthread_create(&dequeueThread, NULL, Dequeue, NULL);
-    while (playingGame.IsGameRunning && key!=ESC) {                     // oyun sona erene kadar devam et
+    while (playingGame.IsGameRunning) {                     // oyun sona erene kadar devam et
             key = getch();
             if (key != KEYERROR) {
                  if (key == playingGame.leftKey && playingGame.current.x-playingGame.current.speed>2 ) {
@@ -378,8 +381,15 @@ void *newGame(void *)
                     drawCar(playingGame.current,2,1);
                 }
             }
+			if(key == ESC)
+			{
+				playingGame.IsGameRunning = false;
+			}
         usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
     }
+	pthread_join(enqueueThread, NULL);
+	pthread_join(dequeueThread, NULL);
+	
 }
 
 
@@ -389,10 +399,9 @@ void *moveCar(void *data) {
     srand(time(NULL));
     bool isCarExit = false;
 	bool isCarCrash = false;
-        while (playingGame.IsGameRunning && !isCarExit && !isCarCrash) {
+        while (playingGame.IsGameRunning || (!isCarExit && !isCarCrash)) {
             Car *currentCar = (Car *)data;
             // Aracın yolu terk ettiğinde
-            while (true) {
                 drawCar(*currentCar, 1, 0); // Aracı sil
                 currentCar[0].y += 1 + rand() % currentCar[0].speed;
 
@@ -415,23 +424,28 @@ void *moveCar(void *data) {
                 drawCar(*currentCar, 2, 0);
 				usleep(playingGame.moveSpeed - currentCar[0].speed);
             }
-    }
+		
 }
 
 // Dequeue
 void *Dequeue(void *) {
     srand(time(NULL));
 	int i = 0;
-	pthread_t moveProcess;
+	pthread_t moveProcess[10];
     while (playingGame.IsGameRunning) { // Oyun devam ettiği sürece
-          sleep((rand() % 2) + 2);
+        sleep((rand() % 2) + 2);
         if (!playingGame.cars.empty()) {
             Car *currentCar = new Car(playingGame.cars.front());
             playingGame.cars.pop();
-            pthread_create(&moveProcess, NULL, moveCar,(void *) currentCar);
+            pthread_create(moveProcess+i, NULL, moveCar,(void *) currentCar);
         }
 		i++;
     }
+	while(i > 0)
+	{
+		pthread_cancel(moveProcess[i]);
+		i--;
+	}
 }
 
 
