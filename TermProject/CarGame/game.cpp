@@ -126,37 +126,159 @@ int main()
 }
 
 
+void *newGame(void *)
+{
+    printWindow();                                          // yolun çizilmesini baþlat
+    drawCar(playingGame.current,2,1);                       // oyuncunun kullandýðý aracý ekrana çiz
+    int key;
+    pthread_t enqueueThread , dequeueThread;
+    pthread_create(&enqueueThread, NULL, enqueue, NULL);
+    pthread_create(&dequeueThread, NULL, Dequeue, NULL);
+    while (playingGame.IsGameRunning) {                     // oyun sona erene kadar devam et
+            key = getch();
+            if (key != KEYERROR) {
+                 if (key == playingGame.leftKey && playingGame.current.x-playingGame.current.speed>2 )
+                    {
+                        drawCar(playingGame.current,1,1);
+                        playingGame.current.x-=playingGame.current.speed;
+                        drawCar(playingGame.current,2,1);
+                    }
+                 else if(key == playingGame.rightKey && playingGame.current.x+playingGame.current.speed<93)
+                    {
+                    drawCar(playingGame.current,1,1);
+                    playingGame.current.x+=playingGame.current.speed;
+                    drawCar(playingGame.current,2,1);
+                    }
+            }
+			if(key == ESC)
+			{
+				playingGame.IsGameRunning = false;
+			}
+        usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
+    }
+	pthread_join(enqueueThread, NULL);
+	pthread_join(dequeueThread, NULL);
+
+}
+
+// This method runs within its own thread. So each car move the independently.
+void *moveCar(void *data) {
+    srand(time(NULL));
+    bool isCarExit = false;
+	bool isCarCrash = false;
+        while (playingGame.IsGameRunning || (!isCarExit && !isCarCrash))
+            {
+                Car *currentCar = (Car *)data;
+                drawCar(*currentCar, 1, 0);
+                currentCar[0].y += 1 + rand() % currentCar[0].speed;
+                if (currentCar[0].y >= EXITY)
+                {
+                    playingGame.points += currentCar[0].height * currentCar[0].width;
+                    isCarExit = true;
+                    break;
+                }
+				bool isCrashY = (playingGame.current.y < currentCar[0].y + currentCar[0].height) && (playingGame.current.y > currentCar[0].y);
+				bool isCrashXL = (playingGame.current.x < currentCar[0].x + currentCar[0].width) && (playingGame.current.x > currentCar[0].x);
+				bool isCrashXR = (playingGame.current.x + playingGame.current.width > currentCar[0].x) && (playingGame.current.x < currentCar[0].x);
+
+				if(isCrashY && (isCrashXL || isCrashXR))
+				{
+					isCarCrash = true;
+					playingGame.IsGameRunning = false;
+					break;
+				}
+
+                drawCar(*currentCar, 2, 0);
+				usleep(playingGame.moveSpeed - currentCar[0].speed);
+            }
+
+}
+
+// This method dequeues a car from the queue with a random interval between 2 to 4 seconds.
+void *Dequeue(void *) {
+    srand(time(NULL));
+	int i = 0;
+	pthread_t moveProcess[10];
+    while (playingGame.IsGameRunning) { // Oyun devam ettiği sürece
+        sleep((rand() % 2) + 2);
+        if (!playingGame.cars.empty()) {
+            Car *currentCar = new Car(playingGame.cars.front());
+            playingGame.cars.pop();
+            pthread_create(moveProcess+i, NULL, moveCar,(void *) currentCar);
+        }
+		i++;
+    }
+	while(i > 0)
+	{
+		pthread_cancel(moveProcess[i]);
+		i--;
+	}
+}
+
+
+// This method enqueues a car into the queue every 1 seconds.
+void *enqueue(void *) {
+    srand(time(NULL));
+    while (playingGame.IsGameRunning)
+    {
+        if(playingGame.cars.size() < maxCarNumber)
+        {
+            Car newCar;
+            newCar.ID = playingGame.counter;
+            newCar.height = create_car_height();
+            newCar.width = create_car_width();
+            newCar.x = create_car_x(newCar.width);
+            newCar.y = create_car_y();
+            newCar.speed = create_car_speed(newCar.height);
+            newCar.clr = create_car_clr();
+            newCar.chr = create_car_type();
+            playingGame.counter += 1;
+
+            if (playingGame.counter == IDMAX)
+            {
+                playingGame.counter = IDSTART;
+            }
+             playingGame.cars.push(newCar);
+        }
+        sleep(1);
+    }
+}
+
+
+
+
+
+
+void printSingleLine(int y, int x, const char *text, bool selected) {
+    if (selected) {
+        attron(COLOR_PAIR(2)); // Kırmızı renk çiftini etkinleştir
+        mvprintw(y, x - 2, "->");
+        mvprintw(y, x, text); // Menü öğesini ekrana yazdır
+        attroff(COLOR_PAIR(2)); // Kırmızı renk çiftini devre dışı bırak
+    } else {
+        mvprintw(y, x - 2, "  "); // Önceki işareti sil
+        attron(COLOR_PAIR(1)); // Yeşil renk çiftini etkinleştir
+        mvprintw(y, x, text); // Menü öğesini ekrana yazdır
+        attroff(COLOR_PAIR(1)); // Yeşil renk çiftini devre dışı bırak
+    }
+}
+
+
+
 void printMenu()
 {
 	endwin();
-    int selectedItem = 0; // Seçili menü öğesinin indisini saklar
-    int key = -1; // Klavyeden alınacak tuş değeri için değişken
+    int selectedItem = 0;
+    int key = -1;
 
-    while (true) // ENTER tuşuna basılmadığı sürece devam et
+    while (true)
     {
         for (int i = 0; i < mainMenuItem; i++)
         {
-            // Seçili öğenin rengini belirle
-            if (i == selectedItem)
-            {
-                attron(COLOR_PAIR(2)); // Kırmızı renk çiftini etkinleştir
-                mvprintw(MENUY + (i * MENUDIF), MENUX - 2,"->");
-                mvprintw(MENUY + (i * MENUDIF), MENUX,mainMenu[i]); // Menü öğesini ekrana yazdır
-            }else
-            {
-                attron(COLOR_PAIR(1)); // Yeşil renk çiftini etkinleştir
-                mvprintw(MENUY + (i * MENUDIF), MENUX,mainMenu[i]); // Menü öğesini ekrana yazdır
-            }
+            printSingleLine(MENUY + (i * MENUDIF), MENUX, mainMenu[i], i == selectedItem);
         }
-
-        attroff(COLOR_PAIR(1)); // Yeşil renk çiftini devre dışı bırak
-        attroff(COLOR_PAIR(2)); // Kırmızı renk çiftini devre dışı bırak
 
         key = getch(); // Klavyeden giriş al
-        if(key != KEYERROR)
-        {
-            clear();
-        }
         if (key == KEYDOWN) // Aşağı ok tuşuna basıldığında
         {
             selectedItem = (selectedItem + 1) % mainMenuItem; // Seçili öğeyi bir sonraki öğeye taşı
@@ -166,16 +288,18 @@ void printMenu()
             selectedItem = (selectedItem - 1 + mainMenuItem) % mainMenuItem; // Seçili öğeyi bir önceki öğeye taşı
         }else if(key ==ENTER)
         {
-            pthread_t th2;
-            clear();
-
+            endwin();
 			initWindow();
             switch(selectedItem)
             {
                 case 0:
 						initGame();
+						pthread_t th2;
                         pthread_create(&th2, NULL, newGame, NULL);
                         pthread_join(th2, NULL);
+                    break;
+                case 1:
+
                     break;
                 case 2:
                         printInstructor();
@@ -188,11 +312,11 @@ void printMenu()
                         break;
                 case 5:
                     playingGame.IsGameRunning=false;
+                    return;
                     break;
             }
 			endwin();
-			initWindow();
-            clear();
+            initWindow();
         }
         usleep(MENSLEEPRATE);
     }
@@ -201,59 +325,36 @@ void printMenu()
 
 void printInstructor()
 {
-	endwin();
-	initWindow();
     attron(COLOR_PAIR(1));
     char instructMenu[4][50]={"< or A: moves the car to the left","> or D: moves the car to right","ESC: exist the game without saving","S: saves and exists the game"};
-
     for(int i=0;i<4;i++)
     {
          mvprintw(MENUY + (i * MENUDIF), MENUX,instructMenu[i]);
     }
-    refresh();
     sleep(5);
 }
 
-
 void printSettings()
 {
-	endwin();
-	initWindow();
-    int selectedItem = 0; // Seçili menü öğesinin indisini saklar
-    int key = -1; // Klavyeden alınacak tuş değeri için değişken
+    int selectedItem = 0;
+    int key = -1;
 
-    while (true) // ENTER tuşuna basılmadığı sürece devam et
+    while (true)
     {
-
         for (int i = 0; i < settingMenuItem; i++)
         {
-            if (i == selectedItem)
-            {
-                attron(COLOR_PAIR(2)); // Kırmızı renk çiftini etkinleştir
-                mvprintw(MENUY + (i * MENUDIF), MENUX - 2,"->");
-                mvprintw(MENUY + (i * MENUDIF), MENUX,settingMenu[i]); // Menü öğesini ekrana yazdır
-            }else
-            {
-                attron(COLOR_PAIR(1)); // Yeşil renk çiftini etkinleştir
-                mvprintw(MENUY + (i * MENUDIF), MENUX,settingMenu[i]); // Menü öğesini ekrana yazdır
-            }
+             printSingleLine(MENUY + (i * MENUDIF), MENUX, settingMenu[i], i == selectedItem);
         }
 
-        attroff(COLOR_PAIR(1)); // Yeşil renk çiftini devre dışı bırak
-        attroff(COLOR_PAIR(2)); // Kırmızı renk çiftini devre dışı bırak
+        key = getch();
 
-        key = getch(); // Klavyeden giriş al
-        if(key != KEYERROR)
+        if (key == KEYDOWN)
         {
-            clear();
+            selectedItem = (selectedItem + 1) % settingMenuItem;
         }
-        if (key == KEYDOWN) // Aşağı ok tuşuna basıldığında
+        else if (key == KEYPUP)
         {
-            selectedItem = (selectedItem + 1) % settingMenuItem; // Seçili öğeyi bir sonraki öğeye taşı
-        }
-        else if (key == KEYPUP) // Yukarı ok tuşuna basıldığında
-        {
-            selectedItem = (selectedItem - 1 + settingMenuItem) % settingMenuItem; // Seçili öğeyi bir önceki öğeye taşı
+            selectedItem = (selectedItem - 1 + settingMenuItem) % settingMenuItem;
         }else if(key ==ENTER)
         {
              switch(selectedItem)
@@ -267,15 +368,13 @@ void printSettings()
                     playingGame.rightKey= RightKeyD;
                     break;
              }
-            break;
+            return;
         }
     }
 }
 
 void printPoint()
 {
-	endwin();
-	initWindow();
     FILE *file = fopen(pointsTxt,"r");
     attron(COLOR_PAIR(1));
     int column = MENUX; // İlk sütunun başlangıç koordinatı
@@ -306,7 +405,6 @@ void printPoint()
     {
         mvprintw(MENUY, MENUX, "Error: Cannot open points file");
     }
-    refresh();
     sleep(5);
 }
 
@@ -350,124 +448,6 @@ void initGame()
     playingGame.current.chr = '*';                          // kullanýcýnýn aracý için karakter baþlangýç deðerini ayarla
 }
 
-void *newGame(void *)
-{
-	endwin();
-	initWindow();
-    printWindow();                                          // yolun çizilmesini baþlat
-    drawCar(playingGame.current,2,1);                       // oyuncunun kullandýðý aracý ekrana çiz
-    int key;
-    pthread_t enqueueThread , dequeueThread;
-    pthread_create(&enqueueThread, NULL, enqueue, NULL);
-    pthread_create(&dequeueThread, NULL, Dequeue, NULL);
-    while (playingGame.IsGameRunning) {                     // oyun sona erene kadar devam et
-            key = getch();
-            if (key != KEYERROR) {
-                 if (key == playingGame.leftKey && playingGame.current.x-playingGame.current.speed>2 ) {
-                        drawCar(playingGame.current,1,1);
-                        playingGame.current.x-=playingGame.current.speed;
-                        drawCar(playingGame.current,2,1);
-                } else if(key == playingGame.rightKey && playingGame.current.x+playingGame.current.speed<93)
-                {
-                    drawCar(playingGame.current,1,1);
-                    playingGame.current.x+=playingGame.current.speed;
-                    drawCar(playingGame.current,2,1);
-                }
-            }
-			if(key == ESC)
-			{
-				playingGame.IsGameRunning = false;
-			}
-        usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
-    }
-	pthread_join(enqueueThread, NULL);
-	pthread_join(dequeueThread, NULL);
-	
-}
-
-
-
-
-void *moveCar(void *data) {
-    srand(time(NULL));
-    bool isCarExit = false;
-	bool isCarCrash = false;
-        while (playingGame.IsGameRunning || (!isCarExit && !isCarCrash)) {
-            Car *currentCar = (Car *)data;
-            // Aracın yolu terk ettiğinde
-                drawCar(*currentCar, 1, 0); // Aracı sil
-                currentCar[0].y += 1 + rand() % currentCar[0].speed;
-
-                if (currentCar[0].y >= EXITY) {
-                    playingGame.points += currentCar[0].height * currentCar[0].width;
-                    isCarExit = true;
-                    break;
-                }
-				bool isCrashY = (playingGame.current.y < currentCar[0].y + currentCar[0].height) && (playingGame.current.y > currentCar[0].y);
-				bool isCrashXL = (playingGame.current.x < currentCar[0].x + currentCar[0].width) && (playingGame.current.x > currentCar[0].x);
-				bool isCrashXR = (playingGame.current.x + playingGame.current.width > currentCar[0].x) && (playingGame.current.x < currentCar[0].x);
-
-				if(isCrashY && (isCrashXL || isCrashXR))
-				{
-					isCarCrash = true;
-					playingGame.IsGameRunning = false;
-					break;
-				}
-
-                drawCar(*currentCar, 2, 0);
-				usleep(playingGame.moveSpeed - currentCar[0].speed);
-            }
-		
-}
-
-// Dequeue
-void *Dequeue(void *) {
-    srand(time(NULL));
-	int i = 0;
-	pthread_t moveProcess[10];
-    while (playingGame.IsGameRunning) { // Oyun devam ettiği sürece
-        sleep((rand() % 2) + 2);
-        if (!playingGame.cars.empty()) {
-            Car *currentCar = new Car(playingGame.cars.front());
-            playingGame.cars.pop();
-            pthread_create(moveProcess+i, NULL, moveCar,(void *) currentCar);
-        }
-		i++;
-    }
-	while(i > 0)
-	{
-		pthread_cancel(moveProcess[i]);
-		i--;
-	}
-}
-
-
-// add cars to queue
-void *enqueue(void *) {
-    srand(time(NULL));
-    while (playingGame.IsGameRunning) { // Oyun devam ettiği sürece
-        if (playingGame.cars.size() < maxCarNumber) { // Kuyrukta maksimum araç sayısına ulaşmadıysa
-            Car newCar;
-            newCar.ID = playingGame.counter;
-            newCar.height = create_car_height();
-            newCar.width = create_car_width();
-            newCar.x = create_car_x(newCar.width);
-            newCar.y = create_car_y();
-            newCar.speed = create_car_speed(newCar.height);
-            newCar.clr = create_car_clr();
-            newCar.chr = create_car_type();
-            playingGame.counter += 1;
-            if (playingGame.counter == IDMAX)
-                playingGame.counter = IDSTART;
-
-            playingGame.cars.push(newCar); // Oluşturulan aracı kuyruğa ekle
-
-            sleep(1); // 2-4 saniye arasında beklet
-        }
-    }
-}
-
-
 
 void drawCar(Car c, int type, int direction )
 {
@@ -485,11 +465,11 @@ void drawCar(Car c, int type, int direction )
             mvhline(c.y, c.x, drawnChar, c.width);           // dikdörtgenin üst çizgisi
             mvhline(c.y + c.height - 1, c.x, drawnChar, c.width); // dikdörtgenin alt çizgisi
 
-            if(direction == 0) // Eðer yolda baþka bir araç varsa
+            if(direction == 0)
                 mvhline(c.y + c.height, c.x, drawnChar, c.width);
-            else // oyuncunun aracý
+            else
                 mvhline(c.y -1, c.x, drawnChar, c.width);
-            mvvline(c.y, c.x, drawnChar, c.height);          // dikdörtgenin sol çizgisi
+            mvvline(c.y, c.x, drawnChar, c.height);
             mvvline(c.y, c.x + c.width - 1, drawnChar, c.height); // dikdörtgenin sað çizgisi
             char text[5];
             if (type == 1 )
@@ -517,7 +497,7 @@ void printWindow()
     for (int i = lineLEN; i < wHeight -lineLEN ; ++i) {      // yolun ortasına çizgiyi çiz
         mvprintw(i, lineX, "#");
     }
-       // Ağaçları çiz
+
     attron(COLOR_PAIR(1));
     char tree[4] = "";
     for(int i=1;i<=3;i++)
@@ -537,7 +517,7 @@ int create_car_x(int width)
 	do{
 		number = (rand() % n) + 5;
 	}while((number > lineX - width) && (number < lineX + width));
-	
+
     return number;
 }
 
@@ -547,7 +527,7 @@ int create_car_y()
 }
 
 int create_car_height()
-{	
+{
     return (rand() % 3) + 5;
 }
 
