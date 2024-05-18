@@ -119,6 +119,7 @@ void *generateCar(void *);
 void *enqueue(void *);
 void *moveCar(void *data);
 void *Dequeue(void *);
+int create_car_x(int width);
 int main()
 {
     playingGame.leftKey = leftKeyArrow;
@@ -180,6 +181,7 @@ void printMenu()
             switch(selectedItem)
             {
                 case 0:
+						initGame();
                         pthread_create(&th2, NULL, newGame, NULL);
                         pthread_join(th2, NULL);
                     break;
@@ -391,7 +393,7 @@ void *moveCar(void *data) {
             Car *currentCar = (Car *)data;
             // Aracın yolu terk ettiğinde
             while (true) {
-                drawCar(*currentCar, 1, 1); // Aracı sil
+                drawCar(*currentCar, 1, 0); // Aracı sil
                 currentCar[0].y += 1 + rand() % currentCar[0].speed;
 
                 if (currentCar[0].y >= EXITY) {
@@ -399,15 +401,18 @@ void *moveCar(void *data) {
                     isCarExit = true;
                     break;
                 }
-				
-				if((currentCar[0].y == playingGame.current.y))
+				bool isCrashY = (playingGame.current.y < currentCar[0].y + currentCar[0].height) && (playingGame.current.y > currentCar[0].y);
+				bool isCrashXL = (playingGame.current.x < currentCar[0].x + currentCar[0].width) && (playingGame.current.x > currentCar[0].x);
+				bool isCrashXR = (playingGame.current.x + playingGame.current.width > currentCar[0].x) && (playingGame.current.x < currentCar[0].x);
+
+				if(isCrashY && (isCrashXL || isCrashXR))
 				{
 					isCarCrash = true;
 					playingGame.IsGameRunning = false;
 					break;
 				}
 
-                drawCar(*currentCar, 2, 1);
+                drawCar(*currentCar, 2, 0);
 				usleep(playingGame.moveSpeed - currentCar[0].speed);
             }
     }
@@ -437,10 +442,10 @@ void *enqueue(void *) {
         if (playingGame.cars.size() < maxCarNumber) { // Kuyrukta maksimum araç sayısına ulaşmadıysa
             Car newCar;
             newCar.ID = playingGame.counter;
-            newCar.x = (rand() % 85) + 5;
-            newCar.y = (rand() % 10) - 10;
             newCar.height = (rand() % 3) + 5;
             newCar.width = (rand() % 3) + 5;
+            newCar.x = create_car_x(newCar.width);
+            newCar.y = (rand() % 10) - 10;
             newCar.speed = newCar.height / 2;
             newCar.clr = (rand() % numOfcolors) + 1;
             int randomType = (rand() % numOfChars) + 1;
@@ -454,6 +459,17 @@ void *enqueue(void *) {
             sleep(1); // 2-4 saniye arasında beklet
         }
     }
+}
+
+int create_car_x(int width)
+{
+	int number, n;
+    n = 85; //Max is 89
+	do{
+		number = (rand() % n) + 5;
+	}while((number > lineX - width) && (number < lineX + width));
+	
+    return number;
 }
 
 void drawCar(Car c, int type, int direction )
