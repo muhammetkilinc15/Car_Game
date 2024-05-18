@@ -112,6 +112,7 @@ int create_car_width();
 int create_car_speed(int height);
 int create_car_clr();
 char create_car_type();
+void printSingleLine(int y, int x, const char *text, bool selected);
 
 int main()
 {
@@ -124,8 +125,6 @@ int main()
 
     return 0;
 }
-
-
 void *newGame(void *)
 {
     printWindow();                                          // yolun çizilmesini baþlat
@@ -134,6 +133,7 @@ void *newGame(void *)
     pthread_t enqueueThread , dequeueThread;
     pthread_create(&enqueueThread, NULL, enqueue, NULL);
     pthread_create(&dequeueThread, NULL, Dequeue, NULL);
+
     while (playingGame.IsGameRunning) {                     // oyun sona erene kadar devam et
             key = getch();
             if (key != KEYERROR) {
@@ -154,6 +154,7 @@ void *newGame(void *)
 			{
 				playingGame.IsGameRunning = false;
 			}
+        refresh();
         usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
     }
 	pthread_join(enqueueThread, NULL);
@@ -173,7 +174,7 @@ void *moveCar(void *data) {
                 currentCar[0].y += 1 + rand() % currentCar[0].speed;
                 if (currentCar[0].y >= EXITY)
                 {
-                    playingGame.points += currentCar[0].height * currentCar[0].width;
+                    playingGame.points += (currentCar[0].height * currentCar[0].width);
                     isCarExit = true;
                     break;
                 }
@@ -299,7 +300,7 @@ void printMenu()
                         pthread_join(th2, NULL);
                     break;
                 case 1:
-
+                    // .....
                     break;
                 case 2:
                         printInstructor();
@@ -325,12 +326,13 @@ void printMenu()
 
 void printInstructor()
 {
-    attron(COLOR_PAIR(1));
+     attron(COLOR_PAIR(1));
     char instructMenu[4][50]={"< or A: moves the car to the left","> or D: moves the car to right","ESC: exist the game without saving","S: saves and exists the game"};
     for(int i=0;i<4;i++)
     {
          mvprintw(MENUY + (i * MENUDIF), MENUX,instructMenu[i]);
     }
+    refresh();
     sleep(5);
 }
 
@@ -405,11 +407,9 @@ void printPoint()
     {
         mvprintw(MENUY, MENUX, "Error: Cannot open points file");
     }
+    refresh();
     sleep(5);
 }
-
-
-
 
 
 void initWindow()
