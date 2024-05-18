@@ -8,65 +8,51 @@
 #include <ctime>
 #include <string.h>
 
-// Ekranýn boyutlarý
-#define wHeight 40 // Yolun yüksekliði
-#define wWidth 100 // Yolun geniþliði
-
-// Orta çizgi ve bitiþ koordinatlarý
-#define lineX 45 // Ortadaki çizginin x koordinatý
-#define lineLEN 10 // Orta çizginin baþlangýc ve sonundan uzaklýðý
-#define EXITY 35 // Yolun bitis koordinatý
-
-// Klavye girdileri
-#define leftKeyArrow 260 // Sol ok tuþunun ASCII kodu
-#define RightKeyArrow 261 // Sað ok tuþunun ASCII kodu
-#define leftKeyA 97 // A'nýn ASCII kodu
-#define RightKeyD 100 // D'nin ASCII kodu
-#define ESC 27 // ESC tuþunun ASCII kodu
-#define ENTER 10 // ENTER tuþunun ASCII kodu
-#define KEYPUP 259 // Yukarý ok tuþunun ASCII kodu
-#define KEYDOWN 258 // Aþaðý ok tuþunun ASCII kodu
-#define KEYERROR -1 // Yanlýþ bir tuþa basýldýðýnda döndürülen ASCII kodu
-#define SAVEKEY 115 // S'nin ASCII kodu
-
-// Seviye ve hýz sýnýrlarý
-#define levelBound 300 // 300 puaný geçince seviyeyi artýrmak için
-#define MAXSLEVEL 5 // Maksimum seviye
-#define ISPEED 500000 // Oyun hareket hýzý için baþlangýç deðeri
-#define DRATESPEED 100000 // Her yeni seviyeden sonra hareket hýzýný azaltmak için
-
-// Araba özellikleri
-#define MINX 5 // Arabalarýn oluþturulurken minimum x koordinat deðeri
-#define MINY 10 // Arabalarýn oluþturulurken maksimum y koordinat deðeri
-#define MINH 5 // Arabalarýn oluþturulurken minimum yükseklik deðeri
-#define MINW 5 // Arabalarýn oluþturulurken minimum geniþlik deðeri
-#define SPEEDOFCAR 3 // Oyuncu tarafýndan kullanýlan arabanýn hýzý
-#define YOFCAR 34 // Oyuncu tarafýndan kullanýlan arabanýn y koordinatý
-#define XOFCAR 45 // Oyuncu tarafýndan kullanýlan arabanýn x koordinatý
-#define IDSTART 10 // Araba kimliði için baþlangýç deðeri
-#define IDMAX 20 // Araba kimliði için maksimum deðer
-#define COLOROFCAR 3 // Oyuncu tarafýndan kullanýlan arabanýn renk deðeri
-#define POINTX 91 // Puanýn yazýldýðý x koordinatý
-#define POINTY 42 // Puanýn yazýldýðý y koordinatý
-
-// Menü özellikleri
-#define MENUX 10 // Menülerin baþlangýç satýrý için x koordinatý
-#define MENUY 5 // Menülerin baþlangýç satýrý için y koordinatý
-#define MENUDIF 2 // Menü satýrlarý arasýndaki fark
-#define MENUDIFX 20 // Menü sütunlarý arasýndaki fark
-#define MENSLEEPRATE 200000 // Menü giriþ için bekleme süresi
-#define GAMESLEEPRATE 250000 // Oyuncu ok tuþlarý için bekleme süresi
-
-// Diðer sabitler
-#define EnQueueSleep 1 // EnQueue bekleme süresi
-#define DeQueueSleepMin 2 // DeQueue minimum bekleme süresi
-#define numOfcolors 4 // Arabalar için seçilebilecek maksimum renk deðeri
-#define maxCarNumber 5 // Kuyruktaki maksimum araba sayýsý
-#define numOfChars 3 // Arabalar için seçilebilecek maksimum desen sayýsý
-#define settingMenuItem 2 // Ayarlar menüsündeki seçenek sayýsý
-#define mainMenuItem 6 // Ana menüdeki seçenek sayýsý
+#define wHeight 40 // height of the road
+#define wWidth 100 // width of the road
+#define lineX 45 // x coordinate of the middle line
+#define lineLEN 10 // distance of the middle line from the beginning and the end
+#define EXITY 35 // coordinate showing the end of the road
+#define leftKeyArrow 260 // ASCII code of the left arrow key
+#define RightKeyArrow 261 // ASCII code of the right arrow key
+#define leftKeyA 97// ASCII code of A
+#define RightKeyD 100 // ASCII code of D
+#define ESC 27 // // ASCII code of the ESC key
+#define ENTER 10 // ASCII code of the ENTER key
+#define KEYPUP 259 // ASCII code of the up arrow key
+#define KEYDOWN 258 // ASCII code of the down arrow key
+#define KEYERROR -1 // ASCII code returned if an incorrect key is pressed
+#define SAVEKEY 115 // ASCII code of S
+#define levelBound 300 // To increase level after 300 points
+#define MAXSLEVEL 5 // maximum level
+#define ISPEED 500000 // initial value for game moveSpeed
+#define DRATESPEED 100000 // to decrease moveSpeed after each new level
+#define MINX 5 // minimum x coordinate value when creating cars
+#define MINY 10 // the maximum y coordinate value when creating the cars, then we multiply it by -1 and take its inverse
+#define MINH 5 // minimum height when creating cars
+#define MINW 5 // minimum width when creating cars
+#define SPEEDOFCAR 3 // speed of the car driven by the player
+#define YOFCAR 34 // y coordinate of the car used by the player
+#define XOFCAR 45 // x coordinate of the car used by the player
+#define IDSTART 10 // initial value for cars ID
+#define IDMAX 20// maximum value for cars ID
+#define COLOROFCAR 3 // color value of the car used by the player
+#define POINTX 91 //x coordinate where the point is written
+#define POINTY 42 //y coordinate where the point is written
+#define MENUX 10 // x coordinate for the starting row of the menus
+#define MENUY 5 // y coordinate for the starting row of the menus
+#define MENUDIF 2 // difference between menu rows
+#define MENUDIFX 20 // difference between menu columns
+#define MENSLEEPRATE 200000 // sleep time for menu input
+#define GAMESLEEPRATE 250000 // sleep time for player arrow keys
+#define EnQueueSleep 1 // EnQueue sleep time
+#define DeQueueSleepMin 2 // DeQueue minimum sleep time
+#define numOfcolors 4 // maximum color value that can be selected for cars
+#define maxCarNumber 5 // maximum number of cars in the queue
+#define numOfChars 3 // maximum number of patterns that can be selected for cars
+#define settingMenuItem 2 // number of options in the setting menu
+#define mainMenuItem 6 // number of options in the main menu
 using namespace std;
-
 
 typedef struct Car{ //
     int ID;
@@ -120,6 +106,13 @@ void *enqueue(void *);
 void *moveCar(void *data);
 void *Dequeue(void *);
 int create_car_x(int width);
+int create_car_y();
+int create_car_height();
+int create_car_width();
+int create_car_speed(int height);
+int create_car_clr();
+char create_car_type();
+
 int main()
 {
     playingGame.leftKey = leftKeyArrow;
@@ -456,14 +449,13 @@ void *enqueue(void *) {
         if (playingGame.cars.size() < maxCarNumber) { // Kuyrukta maksimum araç sayısına ulaşmadıysa
             Car newCar;
             newCar.ID = playingGame.counter;
-            newCar.height = (rand() % 3) + 5;
-            newCar.width = (rand() % 3) + 5;
+            newCar.height = create_car_height();
+            newCar.width = create_car_width();
             newCar.x = create_car_x(newCar.width);
-            newCar.y = (rand() % 10) - 10;
-            newCar.speed = newCar.height / 2;
-            newCar.clr = (rand() % numOfcolors) + 1;
-            int randomType = (rand() % numOfChars) + 1;
-            newCar.chr = randomType == 1 ? '*' : randomType == 2 ? '#' : '+';
+            newCar.y = create_car_y();
+            newCar.speed = create_car_speed(newCar.height);
+            newCar.clr = create_car_clr();
+            newCar.chr = create_car_type();
             playingGame.counter += 1;
             if (playingGame.counter == IDMAX)
                 playingGame.counter = IDSTART;
@@ -475,16 +467,7 @@ void *enqueue(void *) {
     }
 }
 
-int create_car_x(int width)
-{
-	int number, n;
-    n = 85; //Max is 89
-	do{
-		number = (rand() % n) + 5;
-	}while((number > lineX - width) && (number < lineX + width));
-	
-    return number;
-}
+
 
 void drawCar(Car c, int type, int direction )
 {
@@ -547,3 +530,44 @@ void printWindow()
     }
 }
 
+int create_car_x(int width)
+{
+	int number, n;
+    n = 85; //Max is 89
+	do{
+		number = (rand() % n) + 5;
+	}while((number > lineX - width) && (number < lineX + width));
+	
+    return number;
+}
+
+int create_car_y()
+{
+    return (rand() % 10) - 10;
+}
+
+int create_car_height()
+{	
+    return (rand() % 3) + 5;
+}
+
+int create_car_width()
+{
+	return (rand() % 3) + 5;
+}
+
+int create_car_speed(int height)
+{
+	return height / 2;
+}
+
+int create_car_clr()
+{
+	return (rand() % numOfcolors) + 1;
+}
+
+char create_car_type()
+{
+	int randomType = (rand() % numOfChars) + 1;
+    return randomType == 1 ? '*' : randomType == 2 ? '#' : '+';
+}
