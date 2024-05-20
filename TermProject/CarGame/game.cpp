@@ -167,7 +167,7 @@ void *moveCar(void *data) {
     srand(time(NULL));
     bool isCarExit = false;
 	bool isCarCrash = false;
-        while (playingGame.IsGameRunning || (!isCarExit && !isCarCrash))
+        while (playingGame.IsGameRunning)
             {
                 Car *currentCar = (Car *)data;
                 drawCar(*currentCar, 1, 0);
@@ -198,7 +198,6 @@ void *moveCar(void *data) {
 // This method dequeues a car from the queue with a random interval between 2 to 4 seconds.
 void *Dequeue(void *) {
     srand(time(NULL));
-	int i = 0;
 	pthread_t moveProcess[10];
     while (playingGame.IsGameRunning) { // Oyun devam ettiği sürece
         sleep((rand() % 2) + 2);
@@ -207,13 +206,7 @@ void *Dequeue(void *) {
             playingGame.cars.pop();
             pthread_create(moveProcess+i, NULL, moveCar,(void *) currentCar);
         }
-		i++;
     }
-	while(i > 0)
-	{
-		pthread_cancel(moveProcess[i]);
-		i--;
-	}
 }
 
 
