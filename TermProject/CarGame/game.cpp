@@ -96,23 +96,27 @@ void initWindow(); //Creates a new window and sets I/O settings
 
 
 
-void printMenu();
-void printInstructor();
-void printSettings();
-void printPoint();
-void printInstructor();
-void *generateCar(void *);
-void *enqueue(void *);
-void *moveCar(void *data);
-void *Dequeue(void *);
-int create_car_x(int width);
-int create_car_y();
-int create_car_height();
-int create_car_width();
-int create_car_speed(int height);
-int create_car_clr();
-char create_car_type();
-void printSingleLine(int y, int x, const char *text, bool selected);
+void printMenu(); //Printing the menu and get an input
+void printInstructor(); //Print how to play the game
+void printSettings(); //Shows and change the different input types for game
+void printPoint(); //Shows point of the last games
+void *enqueue(void *); //Create new car with random parameters and add to queue
+void *dequeue(void *); //Generate car to road from queue
+void *moveCar(void *data); //Control that movement and crash of a car 
+int create_car_x(int width); //Generate x coordinate of a car
+int create_car_y(); //Generate y coordinate of a car
+int create_car_height(); //Generate height of a car
+int create_car_width(); //Generate width of a car
+int create_car_speed(int height); //Generate speed of a car
+int create_car_clr(); //Generate color of a car
+char create_car_type(); //Generate type of a car
+void printSingleLine(int y, int x, const char *text, bool selected); //Control the selected menu items colors
+void saveCar(Car c); //Save car information to text file
+void saveGame(); //Save game informations to text file
+void loadGame(); //Load game informations from text files and create new game with theese
+void initFiles();
+void printTree();
+void printPlayerPoint(int point);
 
 int main()
 {
@@ -128,11 +132,12 @@ int main()
 void *newGame(void *)
 {
     printWindow();                                          // yolun çizilmesini baþlat
+	initFiles();
     drawCar(playingGame.current,2,1);                       // oyuncunun kullandýðý aracý ekrana çiz
     int key;
     pthread_t enqueueThread , dequeueThread;
     pthread_create(&enqueueThread, NULL, enqueue, NULL);
-    pthread_create(&dequeueThread, NULL, Dequeue, NULL);
+    pthread_create(&dequeueThread, NULL, dequeue, NULL);
 
     while (playingGame.IsGameRunning) {                     // oyun sona erene kadar devam et
             key = getch();
@@ -154,6 +159,12 @@ void *newGame(void *)
 			{
 				playingGame.IsGameRunning = false;
 			}
+			if(key == SAVEKEY)
+			{
+				playingGame.IsGameRunning = false;
+				playingGame.IsSaveCliked = true;
+				saveGame();
+			}
         refresh();
         usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
     }
@@ -162,20 +173,92 @@ void *newGame(void *)
 
 }
 
+void printTree() {
+    attron(COLOR_PAIR(1)); // Renk çiftinin başka bir yerde kodda başlatıldığını varsayıyoruz
+
+    int x = wWidth + 5; // Yolun sağ kenarına olan mesafe, genişliğe eklenmeli
+    int y = 5 ;     // y koordinatı 5, ağaçlar aşağıya doğru 10 piksel
+
+    for (int i = 0; i < 3; i++) {
+        // Ağaç gövdesini çiz
+        attron(COLOR_PAIR(1));
+        mvprintw(y, x, "*");
+        mvprintw(y + 1, x - 1, "*");
+        mvprintw(y + 1, x + 1, "*");
+        mvprintw(y + 2, x - 2, "*");
+        mvprintw(y + 2, x, "*");
+        mvprintw(y + 2, x + 2, "*");
+        attron(COLOR_PAIR(2));
+        mvprintw(y+3 , x , "#");
+        mvprintw(y+4 , x , "#");
+        y += 10;
+    }
+
+}
+
+void saveCar(Car c)
+{
+	pthread_mutex_lock(&playingGame.mutexFile);
+	FILE *carsFile = fopen(CarsTxt,"ab+");
+	fwrite(&c, sizeof(Car), 1, carsFile);
+	fclose(carsFile);
+	pthread_mutex_unlock(&playingGame.mutexFile);
+}
+
+void saveGame()
+{
+	pthread_mutex_lock(&playingGame.mutexFile);
+	FILE *gameFile = fopen(gameTxt,"ab+");
+	fwrite(&playingGame, sizeof(Game), 1, gameFile);
+	fclose(gameFile);
+	pthread_mutex_unlock(&playingGame.mutexFile);
+}
+
+void initFiles()
+{
+	FILE *file = fopen(CarsTxt, "w");
+	fclose(file);
+	FILE *file2 = fopen(gameTxt, "w");
+	fclose(file2);
+}
+
+void loadGame()
+{
+	
+	FILE *file2 = fopen(gameTxt,"rb");
+	fread(&playingGame, sizeof(Game), 1, file2);
+	fclose(file2);
+	playingGame.IsGameRunning = true;
+	playingGame.IsSaveCliked = false;
+	
+	
+	FILE *file = fopen(CarsTxt,"rb");
+	Car current;
+	fread(&current, sizeof(Car), 1, file);
+	while(fread(&current, sizeof(Car), 1, file))
+	{
+		playingGame.cars.push(current);
+	}
+	fclose(file);
+	
+	
+}
+
 // This method runs within its own thread. So each car move the independently.
 void *moveCar(void *data) {
     srand(time(NULL));
     bool isCarExit = false;
 	bool isCarCrash = false;
+	Car *currentCar = (Car *)data;
         while (playingGame.IsGameRunning)
             {
-                Car *currentCar = (Car *)data;
                 drawCar(*currentCar, 1, 0);
                 currentCar[0].y += 1 + rand() % currentCar[0].speed;
                 if (currentCar[0].y >= EXITY)
                 {
-                    playingGame.points += (currentCar[0].height * currentCar[0].width);
-                    isCarExit = true;
+					isCarExit = true;
+					int point = (currentCar[0].height * currentCar[0].width);
+					printPlayerPoint(point);
                     break;
                 }
 				bool isCrashY = (playingGame.current.y < currentCar[0].y + currentCar[0].height) && (playingGame.current.y > currentCar[0].y);
@@ -192,20 +275,32 @@ void *moveCar(void *data) {
                 drawCar(*currentCar, 2, 0);
 				usleep(playingGame.moveSpeed - currentCar[0].speed);
             }
+	if(playingGame.IsSaveCliked)
+	{
+		saveCar(currentCar[0]);
+	}
 
 }
 
+void printPlayerPoint(int point)
+{
+    char text[50]= "Point: ";
+    playingGame.points+=point;
+    sprintf(text,"Point : %d",playingGame.points);
+    mvprintw(POINTY, POINTX, text);
+}
+
 // This method dequeues a car from the queue with a random interval between 2 to 4 seconds.
-void *Dequeue(void *) {
+void *dequeue(void *) {
     srand(time(NULL));
 	pthread_t moveProcess[10];
     while (playingGame.IsGameRunning) { // Oyun devam ettiği sürece
-        sleep((rand() % 2) + 2);
         if (!playingGame.cars.empty()) {
             Car *currentCar = new Car(playingGame.cars.front());
             playingGame.cars.pop();
-            pthread_create(moveProcess+i, NULL, moveCar,(void *) currentCar);
+            pthread_create(moveProcess, NULL, moveCar,(void *) currentCar);
         }
+        sleep((rand() % 2) + 2);
     }
 }
 
@@ -293,7 +388,9 @@ void printMenu()
                         pthread_join(th2, NULL);
                     break;
                 case 1:
-                    // .....
+						loadGame();
+						pthread_create(&th2, NULL, newGame, NULL);
+                        pthread_join(th2, NULL);
                     break;
                 case 2:
                         printInstructor();
@@ -491,16 +588,7 @@ void printWindow()
         mvprintw(i, lineX, "#");
     }
 
-    attron(COLOR_PAIR(1));
-    char tree[4] = "";
-    for(int i=1;i<=3;i++)
-    {
-        for(int j=1;j<=i;j++)
-        {
-            mvaddch(i,wWidth+5+j,'*');
-        }
-
-    }
+    printTree();
 }
 
 int create_car_x(int width)
