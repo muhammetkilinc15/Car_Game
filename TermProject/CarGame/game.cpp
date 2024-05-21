@@ -95,7 +95,6 @@ void initGame(); // Assigns initial values to all control parameters for the new
 void initWindow(); //Creates a new window and sets I/O settings
 
 
-
 void printMenu(); //Printing the menu and get an input
 void printInstructor(); //Print how to play the game
 void printSettings(); //Shows and change the different input types for game
@@ -114,70 +113,79 @@ void printSingleLine(int y, int x, const char *text, bool selected); //Control t
 void saveCar(Car c); //Save car information to text file
 void saveGame(); //Save game informations to text file
 void loadGame(); //Load game informations from text files and create new game with theese
-void initFiles();
-void printTree();
-void printPlayerPoint(int point);
+void initFiles(); //Empty old files
+void printTree(); //Print the trees
+void printPlayerPoint(int point); //Print player current point on the screen
+void savePoint(); //Save points to text file
 
 int main()
 {
-    playingGame.leftKey = leftKeyArrow;
+    playingGame.leftKey = leftKeyArrow; //Initialize game control keys
     playingGame.rightKey = RightKeyArrow;
-    initGame();
-    initWindow();
+    initGame(); //Initialize game settings and values
+    initWindow(); //Iinitalize new window
     printMenu();
-    pthread_t th2;
 
     return 0;
 }
 void *newGame(void *)
 {
-    printWindow();                                          // yolun çizilmesini baþlat
+    printWindow();
 	initFiles();
-    drawCar(playingGame.current,2,1);                       // oyuncunun kullandýðý aracý ekrana çiz
-    int key;
+    drawCar(playingGame.current,2,1);
+    int key; //Input key
     pthread_t enqueueThread , dequeueThread;
-    pthread_create(&enqueueThread, NULL, enqueue, NULL);
+    pthread_create(&enqueueThread, NULL, enqueue, NULL); //Create thread for enqueue and dequeue processes
     pthread_create(&dequeueThread, NULL, dequeue, NULL);
-
-    while (playingGame.IsGameRunning) {                     // oyun sona erene kadar devam et
-            key = getch();
-            if (key != KEYERROR) {
-                 if (key == playingGame.leftKey && playingGame.current.x-playingGame.current.speed>2 )
-                    {
+	printPlayerPoint(playingGame.points); 
+    while (playingGame.IsGameRunning) { //Continue until game finish
+        key = getch();
+        if (key != KEYERROR) {
+				int l_limit = playingGame.current.x - playingGame.current.speed; 
+				int r_limit = playingGame.current.x + playingGame.current.speed; 
+                if (key == playingGame.leftKey && l_limit > 2 ) //If next positions will exit the window do not enter the if statement
+                {
                         drawCar(playingGame.current,1,1);
-                        playingGame.current.x-=playingGame.current.speed;
+                        playingGame.current.x = l_limit;
                         drawCar(playingGame.current,2,1);
-                    }
-                 else if(key == playingGame.rightKey && playingGame.current.x+playingGame.current.speed<93)
-                    {
+                }
+                else if(key == playingGame.rightKey && r_limit<93)
+                {
                     drawCar(playingGame.current,1,1);
-                    playingGame.current.x+=playingGame.current.speed;
+                    playingGame.current.x = r_limit;
                     drawCar(playingGame.current,2,1);
-                    }
-            }
-			if(key == ESC)
-			{
-				playingGame.IsGameRunning = false;
-			}
-			if(key == SAVEKEY)
-			{
+                }
+				else if(key == ESC) //If player press ESC, do nlot save and exit
+				{
+					playingGame.IsGameRunning = false;
+				}
+				else if(key == SAVEKEY)
+				{
 				playingGame.IsGameRunning = false;
 				playingGame.IsSaveCliked = true;
-				saveGame();
+				saveGame();	
+				}
+			}
+			
+			if((playingGame.points >= (playingGame.level * levelBound)) && (playingGame.level < MAXSLEVEL))  //Increase the level every 300 points
+			{
+				playingGame.level += 1;
+				playingGame.moveSpeed -= DRATESPEED;
+				
 			}
         refresh();
-        usleep(GAMESLEEPRATE);                             // 0.25 saniye bekleyin
+        usleep(GAMESLEEPRATE);                  
     }
 	pthread_join(enqueueThread, NULL);
-	pthread_join(dequeueThread, NULL);
-
+	pthread_join(dequeueThread, NULL); //Wait the enqueue and dequeue processes 
+	savePoint();
 }
 
 void printTree() {
-    attron(COLOR_PAIR(1)); // Renk çiftinin başka bir yerde kodda başlatıldığını varsayıyoruz
+    attron(COLOR_PAIR(1)); 
 
-    int x = wWidth + 5; // Yolun sağ kenarına olan mesafe, genişliğe eklenmeli
-    int y = 5 ;     // y koordinatı 5, ağaçlar aşağıya doğru 10 piksel
+    int x = wWidth + 5; 
+    int y = 5 ;     
 
     for (int i = 0; i < 3; i++) {
         // Ağaç gövdesini çiz
@@ -198,7 +206,7 @@ void printTree() {
 
 void saveCar(Car c)
 {
-	pthread_mutex_lock(&playingGame.mutexFile);
+	pthread_mutex_lock(&playingGame.mutexFile); //Lock the file for moveCar threads
 	FILE *carsFile = fopen(CarsTxt,"ab+");
 	fwrite(&c, sizeof(Car), 1, carsFile);
 	fclose(carsFile);
@@ -212,6 +220,13 @@ void saveGame()
 	fwrite(&playingGame, sizeof(Game), 1, gameFile);
 	fclose(gameFile);
 	pthread_mutex_unlock(&playingGame.mutexFile);
+}
+
+void savePoint()
+{
+	FILE *pointFile = fopen(pointsTxt,"a+");
+	fprintf(pointFile,"%d\n",playingGame.points);
+	fclose(pointFile);
 }
 
 void initFiles()
@@ -242,12 +257,16 @@ void loadGame()
 	fclose(file);
 	
 	
-}
 
-// This method runs within its own thread. So each car move the independently.
-void *moveCar(void *data) {
+
+
+/
+
+This method runs within its own thread. So each car move the independently
+
+vo
+d *moveCar(void *data) {
     srand(time(NULL));
-    bool isCarExit = false;
 	bool isCarCrash = false;
 	Car *currentCar = (Car *)data;
         while (playingGame.IsGameRunning)
@@ -256,7 +275,6 @@ void *moveCar(void *data) {
                 currentCar[0].y += 1 + rand() % currentCar[0].speed;
                 if (currentCar[0].y >= EXITY)
                 {
-					isCarExit = true;
 					int point = (currentCar[0].height * currentCar[0].width);
 					printPlayerPoint(point);
                     break;
@@ -288,10 +306,15 @@ void printPlayerPoint(int point)
     playingGame.points+=point;
     sprintf(text,"Point : %d",playingGame.points);
     mvprintw(POINTY, POINTX, text);
-}
 
-// This method dequeues a car from the queue with a random interval between 2 to 4 seconds.
-void *dequeue(void *) {
+
+
+/
+
+This method dequeues a car from the queue with a random interval between 2 to 4 seconds
+
+vo
+d *dequeue(void *) {
     srand(time(NULL));
 	pthread_t moveProcess[10];
     while (playingGame.IsGameRunning) { // Oyun devam ettiği sürece
@@ -302,11 +325,17 @@ void *dequeue(void *) {
         }
         sleep((rand() % 2) + 2);
     }
-}
 
 
-// This method enqueues a car into the queue every 1 seconds.
-void *enqueue(void *) {
+
+
+
+
+
+This method enqueues a car into the queue every 1 seconds
+
+vo
+d *enqueue(void *) {
     srand(time(NULL));
     while (playingGame.IsGameRunning)
     {
@@ -514,7 +543,8 @@ void initWindow()
 	clear();              // ekranı temizle
     sleep(1);             // 1 saniye bekle
     init_pair(1, COLOR_GREEN, COLOR_BLACK); // Yeşil rengi aktifleştirir
-    init_pair(2, COLOR_RED, COLOR_BLACK); // kırmızı rengi aktifleştirir
+    init_pair(2, COLOR_RED, COLOR_BLACK); // kırmızı rengi aktifleştiri
+
 }
 
 
@@ -535,7 +565,8 @@ void initGame()
     playingGame.current.x = XOFCAR;                         // kullanýcýnýn aracý için x koordinat baþlangýç deðerini ayarla
     playingGame.current.y = YOFCAR;                         // kullanýcýnýn aracý için y koordinat baþlangýç deðerini ayarla
     playingGame.current.clr = COLOROFCAR;                   // kullanýcýnýn aracý için renk baþlangýç deðerini ayarla
-    playingGame.current.chr = '*';                          // kullanýcýnýn aracý için karakter baþlangýç deðerini ayarla
+    playingGame.current.chr = '*';                          // kullanýcýnýn aracý için karakter baþlangýç deðerini ayarl
+
 }
 
 
