@@ -140,13 +140,14 @@ void *newGame(void *)
         Car *currentCar = new Car(playingGame.cars.front());
         playingGame.cars.pop();
         pthread_create(&moveProcess, NULL, moveCar,(void *) currentCar);
+		usleep(GAMESLEEPRATE);
     }
 
 
     pthread_t enqueueThread , dequeueThread;
     pthread_create(&enqueueThread, NULL, enqueue, NULL); //Create thread for enqueue and dequeue processes
     pthread_create(&dequeueThread, NULL, dequeue, NULL);
-	printPlayerPoint(playingGame.points);
+	printPlayerPoint(0);
     while (playingGame.IsGameRunning) { //Continue until game finish
         key = getch();
         if (key != KEYERROR)
