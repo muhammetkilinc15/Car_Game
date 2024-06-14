@@ -1,17 +1,18 @@
+# System Programmming Project 
 
-# Operating System TermProject
+**Game Overview**
 
-Bu proje, çocuklar için bir araba trafik oyununun geliştirilmesini amaçlar. Oyun, Thread ve Multithreading yapılarını kullanarak farklı işlevleri eş zamanlı olarak yönetir. Oyuncular, trafiği aşarken puan kazanır ve arabaların çarpışmasını önlemeye çalışır. Oyun, veri yapıları, oyun tasarımı, kullanıcı arayüzü tasarımı, dosya işlemleri ve oyun dinamiklerinin tasarımını içerir. Bu proje, öğrencilere çoklu iş parçacıklı programlama konusunda deneyim kazandırır ve programlama becerilerini geliştirir. 
-
-
-
+In this game, each car is managed by its own thread, allowing them to operate independently. This threading model ensures that all cars can move simultaneously without interference, enhancing the game's dynamic and parallel processing capabilities.
 
 
-## Proje Amacı
 
-Bu projenin amacı, Thread ve Multithreading yapılarını kullanarak bir araba trafik oyunu geliştirmektir. Oyunun temel unsurları arasında veri yapıları, oyun tasarımı, kullanıcı arayüzü tasarımı ve dosya işlemleri bulunmaktadır. Ayrıca, oyunun dinamikleri ve zorluk seviyeleri, oyuncuların ilgisini çekmek ve keyifli bir oyun deneyimi sunmak için önemlidir. Bu kazanımlar,  programlama becerilerini geliştirmek ve gerçek dünya uygulamalarında çoklu iş parçacıklı programlamayı anlamalarına yardımcı olacaktır
-## Ekran Görüntüleri
+## Project Goal 
 
+This project aims to explore parallel programming concepts through the development of a game. It enables multiple vehicles in the game environment to move simultaneously and independently using threads. By leveraging multi-threading techniques, the project focuses on enhancing understanding and application skills in concurrency, synchronization, and parallel execution principles. Participants will gain proficiency in managing concurrent tasks and optimizing performance in real-time applications.
+
+
+
+## Game-related photos
 
 Ana Menü 
 
