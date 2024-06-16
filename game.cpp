@@ -341,7 +341,6 @@ void loadGame()
 {
 	FILE *file2 = fopen(gameTxt,"rb+");
 	fread(&playingGame, sizeof(Game), 1, file2);
-	playingGame.points /=2;
 	fclose(file2);
 	playingGame.cars = queue<Car>();
 	playingGame.mutexFile= PTHREAD_MUTEX_INITIALIZER;
