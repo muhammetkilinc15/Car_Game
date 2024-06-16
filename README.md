@@ -13,11 +13,8 @@ This project aims to explore parallel programming concepts through the developme
 
 
 ## Game-related photos
+![Animation](https://github.com/muhammetkilinc15/OperatingSystem_TermProject/assets/108901980/4a86a156-9eab-457a-8815-10bf12257001)
 
-Ana Menü 
 
-![Screenshot 2024-05-18 152236](https://github.com/muhammetkilinc15/OperatingSystem_TermProject/assets/108901980/d62a68c3-49e1-461b-aced-70aab7aba946)
 
-Game Ekranı
 
-![Screenshot 2024-05-18 152313](https://github.com/muhammetkilinc15/OperatingSystem_TermProject/assets/108901980/2c84d0ce-0c4f-4569-a429-3d37b6d8d855)
